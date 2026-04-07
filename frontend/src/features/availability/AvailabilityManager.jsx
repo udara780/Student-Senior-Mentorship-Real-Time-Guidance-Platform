@@ -127,15 +127,15 @@ export default function AvailabilityManager() {
       {/* Header matching provided image */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end mb-6 gap-6">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight transition-colors duration-300">Availability Management</h1>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight transition-colors duration-300 font-heading">Availability Management</h1>
           <p className="text-slate-500 dark:text-slate-400 font-medium mt-1 text-lg transition-colors duration-300">Set and manage your mentorship time slots.</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 bg-white dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-colors duration-300">
-          <Button variant="ghost" onClick={() => setCurrentDate(new Date())} className="px-5 py-2 text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-sm font-semibold">Today</Button>
-          <Button variant="ghost" onClick={() => setCurrentDate(subWeeks(currentDate, 1))} className="px-5 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-sm font-semibold hidden sm:block">Previous Week</Button>
-          <Button variant="ghost" onClick={() => setCurrentDate(addWeeks(currentDate, 1))} className="px-5 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-sm font-semibold hidden sm:block">Next Week</Button>
-          <Button variant="primary" onClick={openAddModal} className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white border-transparent text-sm font-semibold shadow-orange-500/30 shadow-md transition-colors">Add New Slot</Button>
+          <Button variant="ghost" onClick={() => setCurrentDate(new Date())} className="px-5 py-2 text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-sm font-semibold shadow-none">Today</Button>
+          <Button variant="ghost" onClick={() => setCurrentDate(subWeeks(currentDate, 1))} className="px-5 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-sm font-semibold hidden sm:block shadow-none">Previous Week</Button>
+          <Button variant="ghost" onClick={() => setCurrentDate(addWeeks(currentDate, 1))} className="px-5 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-sm font-semibold hidden sm:block shadow-none">Next Week</Button>
+          <Button variant="primary" onClick={openAddModal} className="px-6 py-2 shadow-md shadow-primary-500/20 text-sm font-semibold">Add New Slot</Button>
         </div>
       </div>
 
@@ -145,7 +145,7 @@ export default function AvailabilityManager() {
           <button onClick={() => setCurrentDate(subWeeks(currentDate, 1))} className="p-2 hover:bg-slate-50 dark:hover:bg-slate-700 border-r border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 transition-colors"><ChevronLeft size={20} /></button>
           <button onClick={() => setCurrentDate(addWeeks(currentDate, 1))} className="p-2 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"><ChevronRight size={20} /></button>
         </div>
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 tracking-tight font-heading">
           {format(weekDays[0], 'MMM d')} - {format(weekDays[6], 'MMM d, yyyy')}
         </h2>
       </div>
@@ -210,8 +210,8 @@ export default function AvailabilityManager() {
                           onClick={() => openEditModal(slot)}
                           className={`absolute left-1.5 right-1.5 rounded-md p-2 text-xs border cursor-pointer hover:shadow-lg transition-all duration-200 z-10 hover:z-30 overflow-hidden group/slot
                             ${slot.isBooked
-                              ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 hover:border-red-300 dark:hover:border-red-700'
-                              : 'bg-green-50 dark:bg-emerald-900/20 border-green-200 dark:border-emerald-900/50 text-green-800 dark:text-emerald-400 hover:border-green-300 dark:hover:border-emerald-700'}`}
+                              ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-400 hover:border-rose-300 dark:hover:border-rose-700'
+                              : 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-900/50 text-indigo-800 dark:text-indigo-400 hover:border-indigo-300 dark:hover:border-indigo-700'}`}
                           style={{ top: `${top}px`, height: `${height}px` }}
                         >
                           <div className="font-bold tracking-tight">{format(parseISO(slot.date), 'EEE d')}</div>
@@ -242,7 +242,7 @@ export default function AvailabilityManager() {
             </button>
 
             <div className="p-6">
-              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 font-heading">
                 {modalMode === 'add' ? 'Add New Slot' : `Edit Time Slot`}
               </h3>
 
@@ -287,7 +287,7 @@ export default function AvailabilityManager() {
                   <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="px-5 py-2 font-semibold dark:text-slate-300 dark:hover:bg-slate-700">
                     Cancel
                   </Button>
-                  <Button type="submit" variant="primary" className="px-6 py-2 bg-orange-500 hover:bg-orange-600 shadow-md shadow-orange-500/20 text-white font-semibold">
+                  <Button type="submit" variant="primary" className="px-6 py-2 shadow-md shadow-primary-500/20 font-semibold">
                     {modalMode === 'add' ? 'Add Slot' : 'Save Changes'}
                   </Button>
                 </div>

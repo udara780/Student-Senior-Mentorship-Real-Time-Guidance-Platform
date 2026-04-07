@@ -46,7 +46,7 @@ export default function RequestsList() {
 
     // If accepting, trigger confirmation first
     if (status === 'accepted' && !isAcceptModalOpen) {
-      const target = requests.find(r => r._id === id) || (displayPending.find(p => p._id === id));
+      const target = requests.find(r => r._id === id);
       setRequestToAccept(target);
       setIsAcceptModalOpen(true);
       return;
@@ -55,50 +55,35 @@ export default function RequestsList() {
     setIsConfirmModalOpen(false);
     setIsAcceptModalOpen(false);
     
-    // Prevent mock data triggering api errors
-    if(id.startsWith('mock')) {
-       toast.success(`Mock Request ${status === 'accepted' ? 'Accepted' : 'Deleted'}!`);
-       // For mock data, filter it out manually to simulate deletion
-       if (status === 'rejected') {
-          // This is a mock UI, so we just acknowledge
-       }
-       return;
-    }
-    
     try {
       await api.put(`/requests/${id}`, { status });
-      toast.success(status === 'accepted' ? 'Request Approved! Starting chat...' : 'Request Removed');
+      
+      // Optimistic real-time UI update
+      setRequests(prev => prev.map(req => 
+         req._id === id ? { ...req, status, updatedAt: new Date() } : req
+      ));
+      
+      toast.success(status === 'accepted' ? 'Request Approved! Starting chat...' : 'Request Rejected');
       
       if (status === 'accepted') {
         // Short delay to let the toast be seen before navigating
         setTimeout(() => {
           navigate('/chat');
         }, 1500);
-      } else {
-        fetchRequests(); // Sync with backend state
       }
     } catch (error) {
       console.error(`Failed to ${status} request`, error);
       toast.error(error.response?.data?.message || `Failed to process request`);
+      // Revert optimism if failed
+      fetchRequests();
     }
   };
 
-  const pendingRequests = requests.filter(req => req.status === 'pending');
-  const historyRequests = requests.filter(req => req.status !== 'pending');
-
-  const hasRealData = requests.length > 0;
-
-  // Visual Map Mocks - Ensures User sees exact requested layout state while testing without an active student database
-  const displayPending = hasRealData ? pendingRequests : [
-    { _id: 'mock1', student: { name: 'Ada Lovelace' }, createdAt: new Date('2024-11-20T11:00:00'), status: 'pending' },
-    { _id: 'mock2', student: { name: 'Grace Hopper' }, createdAt: new Date('2024-11-21T16:00:00'), status: 'pending' },
-    { _id: 'mock3', student: { name: 'John von Neumann' }, createdAt: new Date('2024-11-22T13:00:00'), status: 'pending' },
-  ];
-
-  const displayHistory = hasRealData ? historyRequests : [
-    { _id: 'mock4', student: { name: 'Margaret Hamilton' }, updatedAt: new Date('2024-11-18T15:00:00'), status: 'accepted' },
-    { _id: 'mock5', student: { name: 'Alan Turing' }, updatedAt: new Date('2024-11-16T14:30:00'), status: 'rejected' },
-  ];
+  const displayPending = requests.filter(req => req.status === 'pending');
+  // Sort history to show most recently updated first
+  const displayHistory = requests
+    .filter(req => req.status !== 'pending')
+    .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt));
 
   if (loading) {
     return (
@@ -111,15 +96,13 @@ export default function RequestsList() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 animate-fade-in space-y-12 pb-16 transition-colors duration-300">
       
-      {!hasRealData && (
-        <div className="bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 px-4 py-2 rounded-xl mb-4 border border-amber-200 dark:border-amber-900 shadow-sm inline-block font-semibold transition-colors duration-300">
-           Design Preview: Showing structural mock datums. Real mapping activates on first incoming Student Request.
-        </div>
-      )}
 
-      {/* Pending Section exactly mapping the Mockup visual container */}
+      {/* Pending Section */}
       <section>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6 tracking-tight">Senior: Pending Requests</h2>
+        <div className="flex items-center gap-3 mb-6">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight font-heading">Pending Requests</h2>
+          <span className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2.5 py-0.5 rounded-full text-sm font-bold">{displayPending.length}</span>
+        </div>
         
         <div className="space-y-4">
           {displayPending.length === 0 ? (
@@ -149,27 +132,29 @@ export default function RequestsList() {
                       Requested: {format(new Date(req.createdAt), 'EEE, MMM d, h:mm a')}
                     </p>
                     <div className="mt-3">
-                      <span className="bg-[#fde68a] dark:bg-amber-900/40 text-yellow-800 dark:text-amber-400 px-3.5 py-1 rounded-full text-[11px] font-extrabold tracking-wide uppercase">
-                        Pending
+                      <span className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-3 py-1 rounded-full text-xs font-bold tracking-wide">
+                        Pending Review
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Primary Interaction Buttons strictly mapping mockup colors */}
+                {/* Primary Interaction Buttons */}
                 <div className="flex items-center gap-3 mt-5 sm:mt-0 w-full sm:w-auto">
-                  <button 
+                  <Button 
+                    variant="primary"
                     onClick={() => handleAction(req._id, 'accepted')}
-                    className="flex-1 sm:flex-none bg-[#3b82f6] hover:bg-blue-600 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm focus:ring-2 focus:ring-blue-200 outline-none"
+                    className="flex-1 sm:flex-none shadow-none hover:shadow-lg hover:-translate-y-0.5"
                   >
                     Accept
-                  </button>
-                  <button 
+                  </Button>
+                  <Button 
+                    variant="ghost"
                     onClick={() => handleAction(req._id, 'rejected')}
-                    className="flex-1 sm:flex-none bg-[#ef4444] hover:bg-red-600 text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-colors shadow-sm focus:ring-2 focus:ring-red-200 outline-none"
+                    className="flex-1 sm:flex-none text-slate-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 shadow-none border border-transparent"
                   >
                     Reject
-                  </button>
+                  </Button>
                 </div>
               </Card>
             ))
@@ -179,7 +164,7 @@ export default function RequestsList() {
 
       {/* History Section exactly mapping the layout sub-container */}
       <section>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6 tracking-tight">Recent History</h2>
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6 tracking-tight font-heading">Recent History</h2>
         
         <div className="space-y-4">
            {displayHistory.length === 0 ? (
@@ -188,7 +173,7 @@ export default function RequestsList() {
              displayHistory.map((req) => {
                const isApproved = req.status === 'accepted';
                return (
-                  <Card key={req._id} className="flex items-center justify-between p-4 px-5 border border-slate-200 dark:border-slate-700 shadow-sm rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors cursor-default">
+                  <Card key={req._id} className="flex items-center justify-between p-4 px-5 border border-slate-200 dark:border-slate-800 shadow-sm rounded-xl bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors cursor-default even:bg-slate-50/50 dark:even:bg-slate-800/30">
                     
                     <div className="flex items-center gap-4 truncate">
                       <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-900 flex-shrink-0 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
@@ -204,8 +189,8 @@ export default function RequestsList() {
                     </div>
 
                     <div className="ml-4 flex-shrink-0">
-                       <span className={`px-4 py-1.5 rounded-full text-[11px] font-extrabold tracking-wide uppercase shadow-sm
-                         ${isApproved ? 'bg-[#bbf7d0] dark:bg-emerald-900/40 text-green-800 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400'}`}>
+                       <span className={`px-3 py-1 rounded-full text-xs font-bold tracking-wide shadow-sm
+                         ${isApproved ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'}`}>
                           {isApproved ? 'Approved' : 'Rejected'}
                        </span>
                     </div>
@@ -258,7 +243,8 @@ export default function RequestsList() {
           <>
             <Button variant="ghost" onClick={() => setIsAcceptModalOpen(false)}>Cancel</Button>
             <Button 
-              className="bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 text-white"
+              variant="primary"
+              className="shadow-lg shadow-primary-500/20"
               onClick={() => handleAction(requestToAccept?._id, 'accepted')}
             >
               Accept & Start Chat

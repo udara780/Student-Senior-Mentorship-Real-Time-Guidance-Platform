@@ -10,7 +10,7 @@ const generateToken = (id) => {
 // @access  Public
 const register = async (req, res) => {
   try {
-    const { name, email, password, role, bio, skills } = req.body;
+    const { name, email, password, role, bio, skills, wantsToBeMentor } = req.body;
     let profilePhoto = '';
 
     if (req.file) {
@@ -22,7 +22,7 @@ const register = async (req, res) => {
       return res.status(400).json({ message: 'Please provide all required fields' });
     }
 
-    // Check if role is valid
+    // Check if role is valid (admin cannot self-register)
     if (!['student', 'senior'].includes(role)) {
       return res.status(400).json({ message: 'Role must be either student or senior' });
     }
@@ -33,19 +33,27 @@ const register = async (req, res) => {
       return res.status(400).json({ message: 'User with this email already exists' });
     }
 
+    // If wantsToBeMentor, keep role as student but flag for admin review
+    const finalRole = wantsToBeMentor ? 'student' : (role || 'student');
+    const mentorStatus = wantsToBeMentor ? 'pending' : 'none';
+
     // Create user (password hashed via pre-save hook in model)
     const user = await User.create({
       name,
       email,
       password,
-      role,
+      role: finalRole,
       bio: bio || '',
       skills: skills ? (typeof skills === 'string' ? JSON.parse(skills) : skills) : [],
       profilePhoto: profilePhoto || '',
+      mentorStatus,
+      isVerified: false,
     });
 
     res.status(201).json({
-      message: 'Registration successful',
+      message: wantsToBeMentor
+        ? 'Registration successful. Your mentor application is pending admin review.'
+        : 'Registration successful',
       token: generateToken(user._id),
       user: {
         _id: user._id,
@@ -55,6 +63,8 @@ const register = async (req, res) => {
         bio: user.bio,
         skills: user.skills,
         profilePhoto: user.profilePhoto,
+        isVerified: user.isVerified,
+        mentorStatus: user.mentorStatus,
       },
     });
   } catch (error) {
@@ -96,6 +106,8 @@ const login = async (req, res) => {
         bio: user.bio,
         skills: user.skills,
         profilePhoto: user.profilePhoto,
+        isVerified: user.isVerified,
+        mentorStatus: user.mentorStatus,
       },
     });
   } catch (error) {

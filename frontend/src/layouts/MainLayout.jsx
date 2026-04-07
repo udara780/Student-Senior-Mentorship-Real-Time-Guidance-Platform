@@ -4,10 +4,17 @@ import { Navbar } from '../components/Navbar';
 
 export const MainLayout = () => {
   return (
-    <div className="min-h-screen bg-slate-50 relative overflow-hidden flex flex-col">
-      {/* Decorative background blobs for rich aesthetics */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-200/40 rounded-full blur-[100px] -z-10 animate-fade-in pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[30%] h-[40%] bg-teal-200/40 rounded-full blur-[100px] -z-10 animate-fade-in pointer-events-none" />
+    <div className="min-h-screen bg-slate-50 relative overflow-hidden flex flex-col dark:bg-[#0B1120]">
+      {/* Premium SaaS Dot Pattern Background */}
+      <div 
+        className="absolute inset-0 pointer-events-none -z-10"
+        style={{
+          backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.15) 1px, transparent 0)',
+          backgroundSize: '24px 24px'
+        }}
+      />
+      {/* Subtle top light gradient */}
+      <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-primary-50/50 to-transparent dark:from-primary-900/10 dark:to-transparent pointer-events-none -z-10" />
       
       <Navbar />
       

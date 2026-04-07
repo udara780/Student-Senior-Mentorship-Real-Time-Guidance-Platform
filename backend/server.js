@@ -31,6 +31,9 @@ app.use('/api/availability', require('./routes/availabilityRoutes'));
 app.use('/api/requests', require('./routes/requestRoutes'));
 app.use('/api/chats', require('./routes/chatRoutes'));
 app.use('/api/sessions', require('./routes/sessionRoutes'));
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
+
 
 // Health check
 app.get('/', (req, res) => {

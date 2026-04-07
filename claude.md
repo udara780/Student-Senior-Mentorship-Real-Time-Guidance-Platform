@@ -130,6 +130,7 @@ A full-stack MERN application where students discover verified seniors, request 
 | POST | `/api/sessions` | Book a session (marks slot as booked) |
 | GET | `/api/sessions` | Get user's sessions |
 | PUT | `/api/sessions/:id` | Update session status |
+| GET | `/api/dashboard/stats` | Get senior dashboard counts (pending requests, mentees, hours, etc.) |
 
 ---
 
@@ -179,6 +180,8 @@ A full-stack MERN application where students discover verified seniors, request 
 - **System-wide Dark Mode**: Implemented a comprehensive theme engine using `ThemeContext` and Tailwind CSS `class` strategy, allowing users to toggle between Light and Dark modes with persistent `localStorage` saving.
 - All core Senior dashboard components (Availability, Sessions, Requests, Cards, Navbar) are now fully theme-aware and optimized for high-contrast dark environments.
 - Enhanced the Mentorship Request list with a dual-modal safety workflow: "Approve & Chat" and "Confirm Rejection" to protect critical user interactions.
+- Added real-time optimistic UI update for pending mentorship requests. Accepted/Rejected requests now instantly move to the "Recent History" section.
 - **Safety Gateways**: Integrated a "Confirm Logout" popup in the Navbar to prevent accidental session termination, keeping the user experience secure and intentional.
 - **Visual Overhaul**: Implemented an immersive landing page and authentication background featuring the campus photography, layered with sophisticated glassmorphism and gradient overlays for a premium, unified brand experience across the Landing, Login, and Register screens.
 - **Profile Photo Support**: Seniors can now optionally upload a profile photo during registration. The system handles binary image transmission via `multer`, generates unique filenames, serves assets statically via `/uploads`, and provides a high-fidelity preview UI with an integrated removal option.
+- **Production Data Flow**: Successfully removed all mock data and structural preview banners from the entire project. The application is now fully integrated with the MongoDB backend, featuring a real-time dashboard statistics engine.

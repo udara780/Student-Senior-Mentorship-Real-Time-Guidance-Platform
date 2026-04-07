@@ -23,8 +23,8 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="glass sticky top-0 z-50 px-6 py-4 flex items-center justify-between shadow-sm transition-colors duration-300 dark:bg-slate-900/80 dark:border-slate-800 dark:shadow-slate-950/20">
-      <Link to="/" className="text-xl font-bold bg-gradient-to-r from-primary-600 to-teal-400 bg-clip-text text-transparent transform hover:scale-105 transition-transform dark:from-primary-400 dark:to-teal-300">
+    <nav className="glass sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between transition-colors duration-300 dark:bg-slate-900/80 border-b border-slate-200/60 dark:border-slate-800">
+      <Link to="/" className="text-xl font-heading font-extrabold tracking-tight bg-gradient-to-r from-primary-600 to-indigo-400 bg-clip-text text-transparent transform hover:scale-[1.02] transition-transform dark:from-primary-400 dark:to-indigo-300">
         Guidance Platform
       </Link>
       
@@ -32,25 +32,37 @@ export const Navbar = () => {
         {/* Theme Toggle Button */}
         <Button 
           variant="ghost" 
-          className="!p-2.5 bg-slate-100/50 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-all duration-300 rounded-xl" 
+          className="!p-2 shadow-none border border-transparent hover:border-slate-200 hover:bg-white dark:hover:border-slate-700 dark:hover:bg-slate-800 transition-all duration-300 rounded-lg text-slate-500" 
           onClick={toggleTheme}
           title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
           {isDarkMode ? (
-            <Sun size={18} className="text-amber-400 animate-pulse-slow" />
+            <Sun size={18} className="text-amber-400" />
           ) : (
-            <Moon size={18} className="text-slate-700" />
+            <Moon size={18} className="text-slate-600" />
           )}
         </Button>
 
         {user ? (
           <>
-            <span className="text-sm font-medium text-slate-600 dark:text-slate-400 hidden md:block">
-              Welcome, {user.name}
+            <span className="text-sm font-semibold text-slate-600 dark:text-slate-300 hidden md:flex items-center">
+              Welcome, {user.name.split(' ')[0]}
             </span>
+            <span className="h-5 w-px bg-slate-200 dark:bg-slate-700 hidden md:block mx-1"></span>
+
+            {/* Notification Bell */}
             <Button 
               variant="ghost" 
-              className="!p-0 w-10 h-10 rounded-xl overflow-hidden bg-slate-100/50 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-transparent hover:border-primary-400/30 transition-all duration-300 shadow-sm" 
+              className="relative !p-2 shadow-none border border-transparent hover:border-slate-200 hover:bg-white dark:hover:border-slate-700 dark:hover:bg-slate-800 transition-all duration-300 rounded-lg text-slate-500"
+              title="Notifications"
+            >
+              <AlertCircle size={18} className="text-slate-600 dark:text-slate-400" />
+              <div className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 border-2 border-white dark:border-slate-900 pointer-events-none"></div>
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              className="!p-0 w-9 h-9 rounded-full overflow-hidden bg-slate-100 hover:ring-2 hover:ring-primary-500/50 hover:ring-offset-2 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 dark:hover:ring-offset-slate-900 transition-all duration-200 shadow-sm" 
               onClick={() => navigate('/profile')}
               title="View Profile"
             >
@@ -61,16 +73,16 @@ export const Navbar = () => {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <User size={20} className="text-slate-700 dark:text-slate-300 mx-auto" />
+                <User size={18} className="text-slate-500 dark:text-slate-400 mx-auto" />
               )}
             </Button>
-            <Button variant="danger" className="!p-2.5 bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20 dark:border-red-500/20 shadow-none border border-red-100" onClick={handleLogoutClick}>
+            <Button variant="ghost" className="!p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 dark:hover:text-red-400 shadow-none" onClick={handleLogoutClick} title="Log Out">
               <LogOut size={18} />
             </Button>
           </>
         ) : (
           <div className="flex gap-2">
-            <Link to="/login"><Button variant="ghost" className="dark:text-slate-300 dark:hover:bg-slate-800">Log In</Button></Link>
+            <Link to="/login"><Button variant="ghost" className="font-semibold text-slate-600 dark:text-slate-300 shadow-none">Log In</Button></Link>
             <Link to="/register"><Button variant="primary">Register</Button></Link>
           </div>
         )}
@@ -82,9 +94,10 @@ export const Navbar = () => {
         title="Confirm Logout"
         footer={(
           <>
-            <Button variant="ghost" onClick={() => setIsLogoutModalOpen(false)} className="dark:text-slate-300">Stay</Button>
+            <Button variant="ghost" onClick={() => setIsLogoutModalOpen(false)} className="dark:text-slate-300 shadow-none border border-transparent">Cancel</Button>
             <Button 
-              className="bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20 font-bold"
+              variant="danger"
+              className="bg-red-500 hover:bg-red-600 text-white shadow-md shadow-red-500/20 font-semibold"
               onClick={confirmLogout}
             >
               Logout
@@ -93,13 +106,13 @@ export const Navbar = () => {
         )}
       >
         <div className="flex flex-col items-center text-center space-y-4 py-2">
-          <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-full flex items-center justify-center animate-bounce-slow">
-            <AlertCircle size={40} />
+          <div className="w-14 h-14 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 rounded-full flex items-center justify-center">
+            <AlertCircle size={32} />
           </div>
           <div>
-            <p className="text-slate-800 dark:text-slate-100 font-bold text-lg">Are you leaving already?</p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 leading-relaxed">
-              Confirm if you want to sign out. Your session data is safely synced.
+            <p className="text-slate-800 dark:text-slate-100 font-bold text-lg font-heading">Sign out already?</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1.5 leading-relaxed">
+              Are you sure you want to log out of your session?
             </p>
           </div>
         </div>

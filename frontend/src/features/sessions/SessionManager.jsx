@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, parseISO, isToday } from 'date-fns';
-import { ChevronLeft, ChevronRight, Search, Filter, User, Video, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, Filter, User, Video, Calendar as CalendarIcon, ExternalLink } from 'lucide-react';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
 import { Card } from '../../components/Card';
@@ -15,6 +15,8 @@ export default function SessionManager() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('scheduled'); // 'scheduled' or 'completed'
+  const [sortBy, setSortBy] = useState('newest'); // 'newest' or 'oldest'
   
   // Meeting Modal State
   const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
@@ -53,70 +55,40 @@ export default function SessionManager() {
     return <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block mr-1.5 shadow-sm"></span>;
   };
 
-  // Extract sessions mapped by day
+  // Calculate mapping
   const getDailySessions = (day) => {
-     // If real sessions exist, map them. Otherwise gracefully fallback to empty to allow the mock UI to demonstrate cleanly if requested.
-     return sessions.filter(session => {
-        if(!session.availability?.date) return false;
-        return isSameDay(parseISO(session.availability.date), day);
-     });
+    return sessions.filter(session => {
+       if(!session.availability?.date) return false;
+       return isSameDay(parseISO(session.availability.date), day);
+    });
+  };
+  
+  // Filtering & Sorting logic
+  const filterSessions = (data) => {
+    return data
+      .filter(s => {
+        const matchesStatus = s.status === filterStatus;
+        const matchesSearch = searchQuery === '' || 
+          s.topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          s.senior?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          s.student?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesStatus && matchesSearch;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.availability.date + 'T' + a.availability.startTime);
+        const dateB = new Date(b.availability.date + 'T' + b.availability.startTime);
+        return sortBy === 'newest' ? dateB - dateA : dateA - dateB;
+      });
   };
 
-  // Mock data overlay specifically designed to mimic the exact structural image requested
-  // until actual student functionality is built in Phase 8
-  const mockUpcoming = [
-    {
-      _id: 'm1',
-      availability: { date: format(new Date(), 'yyyy-MM-dd'), startTime: '15:00', endTime: '16:00' },
-      senior: { name: 'Dr. Emily Carter' },
-      student: { name: 'Alex Johnson' },
-      topic: 'Career Guidance',
-      status: 'scheduled'
-    },
-    {
-      _id: 'm2',
-      availability: { date: format(addMonths(new Date(), 0), 'yyyy-MM-dd'), startTime: '14:00', endTime: '15:00' },
-      senior: { name: 'Prof. Michael Davis' },
-      student: { name: 'Sarah Lee' },
-      topic: 'Research Discussion',
-      status: 'scheduled'
-    }
-  ];
-
-  const mockCompleted = [
-    {
-      _id: 'm3',
-      availability: { date: format(subMonths(new Date(), 0), 'yyyy-MM-dd'), startTime: '16:00', endTime: '17:00' },
-      senior: { name: 'Dr. Emily Carter' },
-      student: { name: 'Alex Johnson' },
-      topic: 'Introduction & Goal Setting',
-      status: 'completed',
-      feedback: 'Pending'
-    },
-    {
-      _id: 'm4',
-      availability: { date: format(subMonths(new Date(), 0), 'yyyy-MM-dd'), startTime: '13:00', endTime: '14:00' },
-      senior: { name: 'Mrs. Susan Green' },
-      student: { name: 'David Kim' },
-      topic: 'Academic Support',
-      status: 'completed',
-      feedback: 'Given'
-    }
-  ];
-
-  const hasRealData = sessions.length > 0;
-  const displayUpcoming = hasRealData ? sessions.filter(s => s.status === 'scheduled') : mockUpcoming;
-  const displayCompleted = hasRealData ? sessions.filter(s => s.status === 'completed') : mockCompleted;
+  const displayUpcoming = filterSessions(sessions);
+  const displayCompleted = filterSessions(sessions);
 
   return (
     <div className="max-w-[1600px] mx-auto animate-fade-in relative z-10 pb-12 transition-colors duration-300">
       <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Session Management Calendar</h1>
-        {!hasRealData && !loading && (
-          <p className="text-amber-600 font-semibold mt-2 text-sm bg-amber-50 inline-block px-3 py-1 rounded-lg border border-amber-200">
-            Preview Mode: Showing structural mock data until Students book your real slots!
-          </p>
-        )}
+        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-heading">Session Management Calendar</h1>
+        <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">Manage your interactive mentorship calendar and track your impact.</p>
       </div>
 
       <div className="flex flex-col xl:flex-row gap-8">
@@ -161,18 +133,7 @@ export default function SessionManager() {
               {/* Days Matrix */}
               <div className="grid grid-cols-7 bg-slate-200 dark:bg-slate-700 gap-[1px]">
                 {calendarDays.map((day, i) => {
-                  const daySessions = hasRealData ? getDailySessions(day) : []; // Fallback to visual empty logic if mock
-                  
-                  // Inject strict visual mockup markers for exact replication if in preview mode
-                  let mockStatus = null;
-                  if (!hasRealData) {
-                    if (i === 17) mockStatus = 'scheduled';
-                    if (i === 24) mockStatus = 'scheduled';
-                    if (i === 26) mockStatus = 'completed';
-                    if (i === 33) mockStatus = 'completed';
-                    if (i === 20) mockStatus = 'pending';
-                  }
-
+                  const daySessions = getDailySessions(day);
                   const isSelected = isSameDay(day, selectedDate);
                   
                   return (
@@ -192,11 +153,6 @@ export default function SessionManager() {
                       
                       {/* Session Indicators rendering */}
                       <div className="mt-2 space-y-1">
-                        {mockStatus && (
-                          <div className="flex items-center text-xs font-semibold text-slate-700 dark:text-slate-300">
-                            {getStatusDot(mockStatus)} {mockStatus.charAt(0).toUpperCase() + mockStatus.slice(1)}
-                          </div>
-                        )}
                         {daySessions.map(ds => (
                           <div key={ds._id} className="flex items-center text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">
                             {getStatusDot(ds.status)} {ds.status.charAt(0).toUpperCase() + ds.status.slice(1)}
@@ -226,81 +182,105 @@ export default function SessionManager() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <select className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer transition-colors">
-              <option>Filter by Status</option>
-              <option>Upcoming</option>
-              <option>Completed</option>
+            <select 
+              className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer transition-colors"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="scheduled">Upcoming</option>
+              <option value="completed">Completed</option>
             </select>
-            <select className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer transition-colors">
-              <option>Sort by Date</option>
-              <option>Newest First</option>
-              <option>Oldest First</option>
+            <select 
+              className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer transition-colors"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
             </select>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-8 min-h-[400px]">
             {/* Upcoming Sessions Section */}
-            <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 tracking-tight">Upcoming Sessions</h3>
-              <div className="flex flex-wrap gap-4">
-                {displayUpcoming.map(session => (
-                  <Card key={session._id} className="flex-1 min-w-[300px] border-l-[6px] border-l-emerald-500 border-t border-r border-b border-slate-200 dark:border-slate-700 shadow-md p-5 rounded-2xl bg-white dark:bg-slate-800 hover:-translate-y-1 transition-all">
-                    <div className="space-y-2 mb-4 text-sm">
-                      <p className="font-extrabold text-slate-800 dark:text-slate-200">Date: <span className="font-semibold">{format(parseISO(session.availability.date), 'MMM dd, yyyy')}</span> | Time: <span className="font-semibold">{session.availability.startTime} - {session.availability.endTime}</span></p>
-                      <p className="font-extrabold text-slate-800 dark:text-slate-200">Mentor: <span className="font-semibold">{session.senior.name} (Senior)</span></p>
-                      <p className="font-extrabold text-slate-800 dark:text-slate-200">Student: <span className="font-semibold">{session.student?.name || 'Awaiting'}</span></p>
-                      <p className="font-extrabold text-slate-800 dark:text-slate-200">Topic: <span className="font-semibold">{session.topic || 'General Guidance'}</span></p>
-                      <p className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center">Status: <span className="font-semibold ml-1">{getStatusDot('scheduled')} Upcoming</span></p>
-                    </div>
-                    {/* Embedded User Avatars & Button */}
-                    <div className="flex justify-between items-center mt-6">
-                      <div className="flex -space-x-3">
-                         <div className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-slate-600 font-bold text-xs"><User size={14} /></div>
-                         <div className="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-blue-600 font-bold text-xs"><User size={14} /></div>
-                      </div>
-                      <button 
-                        onClick={() => {
-                          setSessionToJoin(session);
-                          setIsMeetingModalOpen(true);
-                        }}
-                        className="px-6 py-2 bg-[#d7c4b1] hover:bg-[#cbb59b] text-amber-950 font-bold rounded-lg transition-colors shadow-sm w-full ml-6"
-                      >
-                        Join Meeting
-                      </button>
-                    </div>
-                  </Card>
-                ))}
+            {filterStatus === 'scheduled' && (
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 tracking-tight font-heading">Upcoming Sessions</h3>
+                {displayUpcoming.length === 0 ? (
+                  <div className="p-8 text-center bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                    <p className="text-slate-500 font-medium">No upcoming sessions found.</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-4">
+                    {displayUpcoming.map(session => (
+                      <Card key={session._id} className="flex-1 min-w-[300px] border-l-4 border-l-indigo-500 border-t border-r border-b border-slate-200 dark:border-slate-800 shadow-md p-5 rounded-xl bg-white dark:bg-slate-900/50 hover:shadow-lg transition-all">
+                        <div className="space-y-2 mb-4 text-sm">
+                          <p className="font-extrabold text-slate-800 dark:text-slate-200">Date: <span className="font-semibold">{format(parseISO(session.availability.date), 'MMM dd, yyyy')}</span> | Time: <span className="font-semibold">{session.availability.startTime} - {session.availability.endTime}</span></p>
+                          <p className="font-extrabold text-slate-800 dark:text-slate-200">Mentor: <span className="font-semibold">{session.senior.name} (Senior)</span></p>
+                          <p className="font-extrabold text-slate-800 dark:text-slate-200">Student: <span className="font-semibold">{session.student?.name || 'Awaiting'}</span></p>
+                          <p className="font-extrabold text-slate-800 dark:text-slate-200">Topic: <span className="font-semibold">{session.topic || 'General Guidance'}</span></p>
+                          <p className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center">Status: <span className="font-semibold ml-1">{getStatusDot('scheduled')} Upcoming</span></p>
+                        </div>
+                        {/* Embedded User Avatars & Button */}
+                        <div className="flex justify-between items-center mt-6">
+                          <div className="flex -space-x-3">
+                             <div className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-slate-600 font-bold text-xs"><User size={14} /></div>
+                             <div className="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-blue-600 font-bold text-xs"><User size={14} /></div>
+                          </div>
+                          <Button 
+                            variant="primary"
+                            onClick={() => {
+                              setSessionToJoin(session);
+                              setIsMeetingModalOpen(true);
+                            }}
+                            className="w-full ml-6 shadow-md shadow-primary-500/20 flex justify-center items-center gap-2 group"
+                          >
+                            <Video size={18} className="group-hover:scale-110 transition-transform" />
+                            Join Meeting
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
             {/* Completed Sessions Section */}
-            <div>
-              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 tracking-tight">Completed Sessions</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {displayCompleted.map(session => (
-                  <Card key={session._id} className="border-t-[6px] border-t-blue-500 border-l border-r border-b border-slate-200 dark:border-slate-700 shadow-md p-5 rounded-xl bg-white dark:bg-slate-800 hover:-translate-y-1 transition-all">
-                     <div className="space-y-1.5 mb-4 text-xs">
-                      <p className="font-extrabold text-slate-800 dark:text-slate-200">Date: <span className="font-semibold">{format(parseISO(session.availability.date), 'MMM d, yyyy')}</span></p>
-                      <p className="font-extrabold text-slate-800 dark:text-slate-200">Time: <span className="font-semibold">{session.availability.startTime} - {session.availability.endTime}</span></p>
-                      <p className="font-extrabold text-slate-800 dark:text-slate-200 truncate">Mentor: <span className="font-semibold">{session.senior.name}</span></p>
-                      <p className="font-extrabold text-slate-800 dark:text-slate-200 truncate">Student: <span className="font-semibold">{session.student?.name || 'Unknown'}</span></p>
-                      <p className="font-extrabold text-slate-800 dark:text-slate-200 truncate">Topic: <span className="font-semibold">{session.topic || 'Guidance Session'}</span></p>
-                      <p className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center">Status: <span className="font-semibold ml-1 text-blue-600">Completed</span></p>
-                      {session.feedback && <p className="font-extrabold text-slate-800 dark:text-slate-200">Feedback: <span className="font-semibold">{session.feedback}</span></p>}
-                    </div>
-                    <div className="flex justify-between items-center mt-4">
-                      <div className="flex -space-x-2">
-                         <div className="w-7 h-7 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-slate-600 font-bold text-[10px]"><User size={12} /></div>
-                         <div className="w-7 h-7 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-blue-600 font-bold text-[10px]"><User size={12} /></div>
-                      </div>
-                      <button className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors">
-                        <Video size={16} />
-                      </button>
-                    </div>
-                  </Card>
-                ))}
+            {filterStatus === 'completed' && (
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-4 tracking-tight font-heading">Completed Sessions</h3>
+                {displayCompleted.length === 0 ? (
+                  <div className="p-8 text-center bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                    <p className="text-slate-500 font-medium">No completed sessions found.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {displayCompleted.map(session => (
+                      <Card key={session._id} className="border-t-4 border-t-indigo-500 border-l border-r border-b border-slate-200 dark:border-slate-800 shadow-md p-5 rounded-xl bg-white dark:bg-slate-900/50 hover:shadow-lg transition-all">
+                         <div className="space-y-1.5 mb-4 text-xs">
+                          <p className="font-extrabold text-slate-800 dark:text-slate-200">Date: <span className="font-semibold">{format(parseISO(session.availability.date), 'MMM d, yyyy')}</span></p>
+                          <p className="font-extrabold text-slate-800 dark:text-slate-200">Time: <span className="font-semibold">{session.availability.startTime} - {session.availability.endTime}</span></p>
+                          <p className="font-extrabold text-slate-800 dark:text-slate-200 truncate">Mentor: <span className="font-semibold">{session.senior.name}</span></p>
+                          <p className="font-extrabold text-slate-800 dark:text-slate-200 truncate">Student: <span className="font-semibold">{session.student?.name || 'Unknown'}</span></p>
+                          <p className="font-extrabold text-slate-800 dark:text-slate-200 truncate">Topic: <span className="font-semibold">{session.topic || 'Guidance Session'}</span></p>
+                          <p className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center">Status: <span className="font-semibold ml-1 text-blue-600">Completed</span></p>
+                          {session.feedback && <p className="font-extrabold text-slate-800 dark:text-slate-200">Feedback: <span className="font-semibold">{session.feedback}</span></p>}
+                        </div>
+                        <div className="flex justify-between items-center mt-4">
+                          <div className="flex -space-x-2">
+                             <div className="w-7 h-7 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-slate-600 font-bold text-[10px]"><User size={12} /></div>
+                             <div className="w-7 h-7 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-blue-600 font-bold text-[10px]"><User size={12} /></div>
+                          </div>
+                          <button className="p-2 hover:bg-slate-100 rounded-full text-slate-500 transition-colors">
+                            <Video size={16} />
+                          </button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
+            )}
 
           </div>
         </div>
@@ -316,7 +296,8 @@ export default function SessionManager() {
           <>
             <Button variant="ghost" onClick={() => setIsMeetingModalOpen(false)}>Cancel</Button>
             <Button 
-              className="bg-[#d7c4b1] hover:bg-[#cbb59b] text-amber-950 font-bold shadow-lg shadow-amber-200/50"
+              variant="primary"
+              className="shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2 group"
               onClick={() => {
                 // Here we would typically open the Teams link
                 const teamsUrl = sessionToJoin?.meetingLink || 'https://teams.microsoft.com/l/meetup-join/...';
@@ -324,6 +305,7 @@ export default function SessionManager() {
                 setIsMeetingModalOpen(false);
               }}
             >
+              <ExternalLink size={18} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               Open Teams
             </Button>
           </>

@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['student', 'senior'],
+      enum: ['student', 'senior', 'admin'],
       required: [true, 'Role is required'],
     },
     bio: {
@@ -37,6 +37,20 @@ const userSchema = new mongoose.Schema(
     profilePhoto: {
       type: String,
       default: '',
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    // Tracks a user's mentor application lifecycle
+    // none     → regular student, never applied
+    // pending  → applied to be a mentor, awaiting admin review
+    // approved → admin approved; role has been flipped to 'senior'
+    // rejected → admin rejected the application
+    mentorStatus: {
+      type: String,
+      enum: ['none', 'pending', 'approved', 'rejected'],
+      default: 'none',
     },
   },
   { timestamps: true }

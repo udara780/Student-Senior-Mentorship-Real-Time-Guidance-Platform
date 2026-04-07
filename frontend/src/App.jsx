@@ -14,6 +14,8 @@ import AvailabilityManager from './features/availability/AvailabilityManager';
 import ChatContainer from './features/chat/ChatContainer';
 import UserProfile from './features/profile/UserProfile';
 import SessionManager from './features/sessions/SessionManager';
+import AdminDashboard from './features/admin/AdminDashboard';
+import UserManagement from './features/admin/UserManagement';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
@@ -27,6 +29,25 @@ const ProtectedRoute = ({ children }) => {
   }
   
   if (!user) return <Navigate to="/login" replace />;
+  // Admins should always be on the admin panel
+  if (user.role === 'admin') return <Navigate to="/admin" replace />;
+  return children;
+};
+
+// Guard for admin-only routes
+const AdminRoute = ({ children }) => {
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent flex rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== 'admin') return <Navigate to="/dashboard" replace />;
   return children;
 };
 
@@ -51,7 +72,7 @@ function App() {
           <Route path="/register" element={<Register />} />
         </Route>
 
-        {/* Protected Dashboard Routes */}
+        {/* Protected Dashboard Routes (Student & Senior) */}
         <Route element={
           <ProtectedRoute>
             <MainLayout />
@@ -63,6 +84,16 @@ function App() {
           <Route path="/availability" element={<AvailabilityManager />} />
           <Route path="/chat" element={<ChatContainer />} />
           <Route path="/sessions" element={<SessionManager />} />
+        </Route>
+
+        {/* Admin Routes */}
+        <Route element={
+          <AdminRoute>
+            <MainLayout />
+          </AdminRoute>
+        }>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<UserManagement />} />
         </Route>
         
         {/* Fallback Catch-all Route */}
