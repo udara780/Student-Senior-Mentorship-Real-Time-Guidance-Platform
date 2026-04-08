@@ -10,14 +10,14 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const checkUserLoggedIn = async () => {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       if (token) {
         try {
           const { data } = await api.get('/users/profile');
           setUser(data);
         } catch (error) {
           console.error('Failed to verify token', error);
-          localStorage.removeItem('token');
+          sessionStorage.removeItem('token');
           setUser(null);
         }
       }
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const { data } = await api.post('/auth/login', { email, password });
-      localStorage.setItem('token', data.token);
+      sessionStorage.setItem('token', data.token);
       setUser(data.user);
       toast.success('Welcome back!');
       return { success: true };
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const { data } = await api.post('/auth/register', userData);
-      localStorage.setItem('token', data.token);
+      sessionStorage.setItem('token', data.token);
       setUser(data.user);
       toast.success('Account created successfully!');
       return { success: true };
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     setUser(null);
     toast.success('Logged out successfully');
   };

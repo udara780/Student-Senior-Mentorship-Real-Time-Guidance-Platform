@@ -22,7 +22,7 @@ A full-stack MERN application where students discover verified seniors, request 
 │   ├── config/db.js              # MongoDB connection
 │   ├── middleware/auth.js         # JWT auth + role check
 │   ├── models/
-│   │   ├── User.js               # name, email, password, role, isVerified, skills, bio
+│   │   ├── User.js               # name, email, password, role (student/senior/admin), isVerified, skills, bio, mentorStatus
 │   │   ├── Availability.js       # senior, date, startTime, endTime, isBooked
 │   │   ├── Request.js            # student, senior, message, status (pending/accepted/rejected)
 │   │   ├── Chat.js               # student, senior, request ref
@@ -33,15 +33,19 @@ A full-stack MERN application where students discover verified seniors, request 
 │   │   ├── userController.js     # getVerifiedSeniors, getUserProfile, verifySenior
 │   │   ├── availabilityController.js  # createSlot, getMySlots, getSlotsBySenior, deleteSlot
 │   │   ├── requestController.js  # sendRequest, getMyRequests, getIncomingRequests, updateStatus
-│   │   ├── chatController.js     # getMyChats, getChatMessages
-│   │   └── sessionController.js  # bookSession, getMySessions, updateSessionStatus
+│   │   ├── chatController.js     # getMyChats, getChatMessages (sender populated)
+│   │   ├── sessionController.js  # bookSession, getMySessions, updateSessionStatus
+│   │   ├── dashboardController.js # getDashboardStats (senior stats)
+│   │   └── adminController.js    # getDashboardStats, getPendingMentorRequests, approveMentor, rejectMentor, getAllUsers
 │   ├── routes/
 │   │   ├── authRoutes.js         # POST /api/auth/register, POST /api/auth/login
 │   │   ├── userRoutes.js         # GET /api/users/seniors, GET /api/users/profile, PUT /api/users/verify/:id
 │   │   ├── availabilityRoutes.js # POST, GET /my, GET /:seniorId, DELETE /:id
 │   │   ├── requestRoutes.js      # POST, GET /my, GET /incoming, PUT /:id
 │   │   ├── chatRoutes.js         # GET /api/chats, GET /api/chats/:chatId/messages
-│   │   └── sessionRoutes.js      # POST, GET, PUT /:id
+│   │   ├── sessionRoutes.js      # POST, GET, PUT /:id
+│   │   ├── dashboardRoutes.js    # GET /api/dashboard/stats
+│   │   └── adminRoutes.js        # GET/PUT /api/admin/* (admin-only)
 │   ├── socket/socketHandler.js   # Socket.io auth, joinChat, sendMessage, disconnect
 │   ├── server.js                 # Entry point — Express + Socket.io + MongoDB
 │   ├── package.json
@@ -77,9 +81,9 @@ A full-stack MERN application where students discover verified seniors, request 
 | Decision | Detail |
 |---|---|
 | **Auth** | bcryptjs for password hashing, JWT for stateless auth tokens |
-| **User Roles** | `student` and `senior` — stored in User model |
-| **Senior Account Creation** | Seniors register via `/api/auth/register` with `role: "senior"`. They immediately get an account and can access their dashboard instantly. |
-| **Senior Verification** | Admin verification (`PUT /api/users/verify/:id`) exists in the backend API, but the frontend will allow seniors to function immediately without a pending screen. |
+| **User Roles** | `student`, `senior`, and `admin` — stored in User model |
+| **Senior Account Creation** | Users register as `student`. Toggling `wantsToBeMentor: true` flags `mentorStatus: 'pending'`. Admin approves → role flips to `senior`. |
+| **Admin Creation** | Admins are created via `node createAdmin.js` script. Cannot self-register. |
 | **Chat creation** | A Chat document is auto-created when a mentorship request is accepted |
 | **Socket.io rooms** | Each chat gets a private room (room name = chat ID) |
 | **Slot booking** | Booking a session sets `isBooked: true` on the Availability slot |
@@ -131,6 +135,15 @@ A full-stack MERN application where students discover verified seniors, request 
 | GET | `/api/sessions` | Get user's sessions |
 | PUT | `/api/sessions/:id` | Update session status |
 | GET | `/api/dashboard/stats` | Get senior dashboard counts (pending requests, mentees, hours, etc.) |
+
+### Admin
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/admin/stats` | Platform-wide counts (total users, mentors, sessions) |
+| GET | `/api/admin/mentor-requests` | All pending mentor applications |
+| PUT | `/api/admin/mentor-requests/:id/approve` | Approve → flip role to senior |
+| PUT | `/api/admin/mentor-requests/:id/reject` | Reject mentor application |
+| GET | `/api/admin/users` | Paginated + filterable user list |
 
 ---
 
@@ -185,3 +198,6 @@ A full-stack MERN application where students discover verified seniors, request 
 - **Visual Overhaul**: Implemented an immersive landing page and authentication background featuring the campus photography, layered with sophisticated glassmorphism and gradient overlays for a premium, unified brand experience across the Landing, Login, and Register screens.
 - **Profile Photo Support**: Seniors can now optionally upload a profile photo during registration. The system handles binary image transmission via `multer`, generates unique filenames, serves assets statically via `/uploads`, and provides a high-fidelity preview UI with an integrated removal option.
 - **Production Data Flow**: Successfully removed all mock data and structural preview banners from the entire project. The application is now fully integrated with the MongoDB backend, featuring a real-time dashboard statistics engine.
+- **Admin Dashboard**: Built a complete admin control panel at `/admin` with platform stats, pending mentor application review (approve/reject), and a searchable user management table at `/admin/users`. Admin accounts are created via `node createAdmin.js` in the backend directory.
+- **Mentor Approval Workflow**: Users can now request to become a mentor via `wantsToBeMentor: true` on registration. Their role stays `student` with `mentorStatus: 'pending'` until an admin approves. On approval, role flips to `senior` and `isVerified` is set to `true`.
+- **Chat Sender Fix**: Fixed `getChatMessages` to `.populate('sender', 'name profilePhoto')` and updated socket handler to broadcast populated messages. ChatContainer now correctly resolves the "other person" in a conversation and displays per-message sender names/avatars.
