@@ -9,56 +9,138 @@
   --color-primary-600: #4f46e5;
   --color-primary-700: #4338ca;
   --color-primary-900: #312e81;
-  
+
   --color-dark: #0f172a;
 
   --font-sans: 'Inter', sans-serif;
   --font-heading: 'Poppins', sans-serif;
-  
+
   --animate-fade-in: fadeIn 0.3s ease-in-out;
   --animate-slide-up: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 
   @keyframes fadeIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes slideUp {
-    0% { transform: translateY(16px); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
+    0% {
+      transform: translateY(16px);
+      opacity: 0;
+    }
+
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
+}
+
+/* ── CSS Custom Properties (used by Profile.jsx inline styles & legacy components) ── */
+:root {
+  --primary-color: #6366f1;
+  --primary-hover: #4f46e5;
+  --bg-dark: #0f172a;
+  --bg-card: rgba(30, 41, 59, 0.7);
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent-1: #38bdf8;
+  --accent-2: #c084fc;
+}
+
+/* ── Global resets ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  outline: none;
+}
+
+/* ── Radial background (used on dark/Profile pages) ── */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-image:
+    radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(192, 132, 252, 0.15), transparent 25%);
+  background-attachment: fixed;
 }
 
 @layer base {
   body {
     @apply bg-slate-50 text-slate-800 font-sans antialiased transition-colors duration-300 dark:bg-slate-900 dark:text-slate-200;
   }
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-heading tracking-tight;
   }
 }
 
 @layer components {
+
   /* Premium Glassmorphism Utilities */
   .glass {
     @apply bg-white/80 backdrop-blur-lg border border-slate-200/50 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.05)] dark:bg-slate-900/80 dark:border-slate-800/80 dark:shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)];
   }
-  
+
   .glass-dark {
     @apply bg-slate-900/80 backdrop-blur-lg border border-white/5 shadow-[0_8px_32px_-8px_rgba(0,0,0,0.4)];
   }
-  
+
+  /* Generic glass panel (non-Tailwind, used by Profile.jsx <style> block) */
+  .glass-panel {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  /* Utility animation class */
+  .animate-fade-in {
+    animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
   /* Scrollbar styling */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
+
   ::-webkit-scrollbar-track {
     background: transparent;
   }
+
   ::-webkit-scrollbar-thumb {
     @apply bg-slate-200 rounded-full dark:bg-slate-700;
   }
+
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-slate-300 dark:bg-slate-600;
   }

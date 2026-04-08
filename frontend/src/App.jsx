@@ -9,17 +9,20 @@ import LandingPage from './features/landing/LandingPage';
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
 import Dashboard from './features/dashboard/Dashboard';
+import Home from './features/dashboard/Home';
+import CreateGroup from './features/createGroup/CreateGroup';
+import FindGroup from './features/findGroup/FindGroup';
 import RequestsList from './features/requests/RequestsList';
 import AvailabilityManager from './features/availability/AvailabilityManager';
 import ChatContainer from './features/chat/ChatContainer';
-import UserProfile from './features/profile/UserProfile';
+import Profile from './features/profile/Profile';
 import SessionManager from './features/sessions/SessionManager';
 import AdminDashboard from './features/admin/AdminDashboard';
 import UserManagement from './features/admin/UserManagement';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
-  
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -27,7 +30,7 @@ const ProtectedRoute = ({ children }) => {
       </div>
     );
   }
-  
+
   if (!user) return <Navigate to="/login" replace />;
   // Admins should always be on the admin panel
   if (user.role === 'admin') return <Navigate to="/admin" replace />;
@@ -54,13 +57,13 @@ const AdminRoute = ({ children }) => {
 function App() {
   return (
     <BrowserRouter>
-      <Toaster 
-        position="top-center" 
-        toastOptions={{ 
-          duration: 3500, 
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 3500,
           style: { background: '#1e293b', color: '#fff', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' },
           success: { iconTheme: { primary: '#14b8a6', secondary: '#fff' } }
-        }} 
+        }}
       />
       <Routes>
         {/* Public Landing Route */}
@@ -79,7 +82,9 @@ function App() {
           </ProtectedRoute>
         }>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<UserProfile />} />
+          <Route path="/profile/setup" element={<Profile />} />
+          <Route path="/create-group" element={<CreateGroup />} />
+          <Route path="/find-group" element={<FindGroup />} />
           <Route path="/requests" element={<RequestsList />} />
           <Route path="/availability" element={<AvailabilityManager />} />
           <Route path="/chat" element={<ChatContainer />} />
@@ -95,9 +100,16 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<UserManagement />} />
         </Route>
-        
+
         {/* Fallback Catch-all Route */}
         <Route path="*" element={<Navigate to="/" replace />} />
+
+        {/* Home — has its own Navbar & Footer, so placed outside MainLayout */}
+        <Route path="/home" element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        } />
       </Routes>
     </BrowserRouter>
   );
