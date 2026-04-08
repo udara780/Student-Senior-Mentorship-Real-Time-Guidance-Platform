@@ -74,8 +74,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // True only when the user has filled in bio AND at least one skill
+  const isProfileComplete = !!(user && user.bio && user.bio.trim() && user.skills && user.skills.length > 0);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile, isProfileComplete }}>
       {children}
     </AuthContext.Provider>
   );
