@@ -42,7 +42,9 @@ const getChatMessages = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to view this chat' });
     }
 
-    const messages = await Message.find({ chat: chatId }).sort({ createdAt: 1 });
+    const messages = await Message.find({ chat: chatId })
+      .populate('sender', 'name profilePhoto')
+      .sort({ createdAt: 1 });
     res.json(messages);
   } catch (error) {
     console.error('Get messages error:', error.message);
