@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Filter, Users, BookOpen, Code, ChevronRight, ChevronLeft, User, PlusCircle, Star, CheckCircle2, UserPlus } from 'lucide-react';
+import api from '../../services/api';
+
 const styles = `
 .find-group-container {
   max-width: 1200px;
@@ -529,14 +531,34 @@ const FindGroup = () => {
   useEffect(() => {
     // Load datasets from mock databases
     const savedGroups = JSON.parse(localStorage.getItem('allGroups') || '[]');
-    const savedProfiles = JSON.parse(localStorage.getItem('allStudents') || '[]');
     const savedRequests = JSON.parse(localStorage.getItem('joinRequests') || '[]');
     const user = JSON.parse(localStorage.getItem('studentProfile'));
     
     setGroups(savedGroups);
-    setProfiles(savedProfiles);
     setJoinRequests(savedRequests);
     setCurrentUser(user);
+
+    // Fetch students from the database
+    const fetchStudents = async () => {
+      try {
+        const response = await api.get('/users/students');
+        const dbStudents = response.data.map(u => ({
+          ...u,
+          // Map MongoDB _id to studentId to keep compatibility with existing components
+          studentId: u.studentId || u._id,
+          // Fallback if not specifically present
+          academicYear: u.bio?.includes('Year') ? u.bio.split(' ')[0] + ' ' + u.bio.split(' ')[1] : 'Year Not Specified'
+        }));
+        setProfiles(dbStudents);
+      } catch (error) {
+        console.error('Error fetching students:', error);
+        // Fallback to local storage if API fails
+        const savedProfiles = JSON.parse(localStorage.getItem('allStudents') || '[]');
+        setProfiles(savedProfiles);
+      }
+    };
+
+    fetchStudents();
   }, []);
 
   const handleJoinRequest = (groupId) => {
@@ -574,8 +596,8 @@ const FindGroup = () => {
 
   const filteredProfiles = profiles.filter(p => 
     (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (p.studentId && p.studentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (p.skills && p.skills.toLowerCase().includes(searchTerm.toLowerCase()))
+    (p.studentId && p.studentId.toString().toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (p.skills && Array.isArray(p.skills) ? p.skills.join(' ').toLowerCase().includes(searchTerm.toLowerCase()) : p.skills?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const getGlobalInitials = (n) => {

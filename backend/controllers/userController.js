@@ -17,6 +17,23 @@ const getSeniors = async (req, res) => {
   }
 };
 
+// @route   GET /api/users/students
+// @desc    Get all students (for finding group members)
+// @access  Private
+const getStudents = async (req, res) => {
+  try {
+    const students = await User.find(
+      { role: 'student' },
+      '-password'
+    ).sort({ createdAt: -1 });
+
+    res.json(students);
+  } catch (error) {
+    console.error('Get students error:', error.message);
+    res.status(500).json({ message: 'Server error fetching students' });
+  }
+};
+
 // @route   GET /api/users/profile
 // @desc    Get logged-in user's profile
 // @access  Private
@@ -84,4 +101,4 @@ const getUserById = async (req, res) => {
   }
 };
 
-module.exports = { getSeniors, getUserProfile, updateUserProfile, getUserById };
+module.exports = { getSeniors, getStudents, getUserProfile, updateUserProfile, getUserById };
