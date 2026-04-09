@@ -19,6 +19,8 @@ import Profile from './features/profile/Profile';
 import SessionManager from './features/sessions/SessionManager';
 import AdminDashboard from './features/admin/AdminDashboard';
 import UserManagement from './features/admin/UserManagement';
+import MentorList from './features/mentors/MentorList';
+import MentorProfile from './features/mentors/MentorProfile';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
@@ -87,9 +89,12 @@ function App() {
           <Route path="/create-group" element={<CreateGroup />} />
           <Route path="/find-group" element={<FindGroup />} />
           <Route path="/requests" element={<RequestsList />} />
+          <Route path="/inbox" element={<RequestsList />} />
           <Route path="/availability" element={<AvailabilityManager />} />
           <Route path="/chat" element={<ChatContainer />} />
           <Route path="/sessions" element={<SessionManager />} />
+          <Route path="/mentors" element={<MentorList />} />
+          <Route path="/mentors/:mentorId" element={<MentorProfile />} />
         </Route>
 
         {/* Admin Routes */}

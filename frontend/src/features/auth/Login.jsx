@@ -12,7 +12,7 @@ export default function Login() {
   const [formErrors, setFormErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login, isProfileComplete } = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const validate = () => {
@@ -42,12 +42,7 @@ export default function Login() {
     
     const result = await login(email, password);
     if (result.success) {
-      // If the user hasn't filled bio/skills yet, guide them to set up their profile first
-      if (!isProfileComplete) {
-        navigate('/profile/setup');
-      } else {
-        navigate('/home');
-      }
+      navigate('/home');
     } else {
       setError(result.message);
     }

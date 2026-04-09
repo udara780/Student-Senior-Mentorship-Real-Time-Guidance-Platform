@@ -105,7 +105,14 @@ export default function Dashboard() {
             <div className="w-14 h-14 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500">
               <Users size={28} />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-2 font-heading tracking-tight">Mentorship Inbox</h3>
+            <div className="flex items-center gap-2.5 mb-2">
+              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 font-heading tracking-tight">Mentorship Inbox</h3>
+              {!loading && stats.pendingRequests > 0 && (
+                <span className="flex items-center gap-1 bg-red-500 text-white text-xs font-bold px-2.5 py-0.5 rounded-full animate-pulse shadow-md shadow-red-500/30">
+                  {stats.pendingRequests} New
+                </span>
+              )}
+            </div>
             <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 flex-1 leading-relaxed">
               Review incoming student requests and accept new guidance opportunities.
             </p>
