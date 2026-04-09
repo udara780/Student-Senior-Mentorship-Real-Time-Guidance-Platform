@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, BookOpen, Code, Plus, Trash2, User, Search, CheckCircle2, AlertCircle } from 'lucide-react';
+import api from '../../services/api';
+import { AuthContext } from '../../context/AuthContext';
+
 const styles = `
 .create-group-container {
   max-width: 900px;
@@ -145,24 +148,6 @@ const styles = `
   cursor: not-allowed;
 }
 
-.back-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 2rem;
-  transition: all 0.3s;
-}
-
-.back-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateX(-5px);
-}
 
 .error-text {
   color: #ef4444;
@@ -176,7 +161,7 @@ const styles = `
 
 const CreateGroup = () => {
   const navigate = useNavigate();
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     moduleName: '',
     moduleCode: '',
@@ -185,14 +170,20 @@ const CreateGroup = () => {
     members: []
   });
 
+  const [allStudents, setAllStudents] = useState([]);
   const [previews, setPreviews] = useState({});
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    const savedProfile = localStorage.getItem('studentProfile');
-    if (savedProfile) {
-      setCurrentUser(JSON.parse(savedProfile));
-    }
+    const fetchStudents = async () => {
+      try {
+        const response = await api.get('/users/students');
+        setAllStudents(response.data);
+      } catch (error) {
+        console.error('Error fetching students:', error);
+      }
+    };
+    fetchStudents();
   }, []);
 
   const handleMaxMembersChange = (e) => {
@@ -224,12 +215,10 @@ const CreateGroup = () => {
         setPreviews(prev => ({ ...prev, [index]: null }));
         setErrors(prev => ({ ...prev, [`member_${index}`]: null }));
       } else if (value.length >= 10) {
-        // Simulate API fetch from "database" (localStorage)
-        const allUsers = JSON.parse(localStorage.getItem('allStudents') || '[]');
-        const foundUser = allUsers.find(u => u.studentId === value);
+        const foundUser = allStudents.find(u => (u.studentId || u._id) === value);
         
         if (foundUser) {
-          setPreviews(prev => ({ ...prev, [index]: foundUser }));
+          setPreviews(prev => ({ ...prev, [index]: { ...foundUser, academicYear: foundUser.bio?.includes('Year') ? foundUser.bio.split(' ')[0] + ' ' + foundUser.bio.split(' ')[1] : 'Year Not Specified' } }));
           setErrors(prev => ({ ...prev, [`member_${index}`]: null }));
         } else {
           setPreviews(prev => ({ ...prev, [index]: null }));
@@ -239,7 +228,7 @@ const CreateGroup = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!currentUser) {
@@ -256,37 +245,36 @@ const CreateGroup = () => {
     }
 
     const newGroup = {
-      id: Date.now(),
-      leaderId: currentUser.studentId,
-      leaderName: currentUser.name,
+      leaderId: currentUser.studentId || currentUser._id || 'Unknown',
+      leaderName: currentUser.name || 'Unknown',
       moduleName: formData.moduleName,
       moduleCode: formData.moduleCode,
       projectTitle: formData.projectTitle || null,
       maxMembers: formData.maxMembers,
       members: [
-        { studentId: currentUser.studentId, name: currentUser.name },
+        { studentId: currentUser.studentId || currentUser._id || 'LeaderID', name: currentUser.name || 'Leader' },
         ...filledMembers.map(m => ({
           studentId: m.studentId,
           name: previews[formData.members.indexOf(m)]?.name || 'Unknown'
         }))
-      ],
-      createdAt: new Date().toISOString()
+      ]
     };
 
-    const existingGroups = JSON.parse(localStorage.getItem('allGroups') || '[]');
-    localStorage.setItem('allGroups', JSON.stringify([...existingGroups, newGroup]));
-    
-    alert("Group created successfully!");
-    navigate('/find-group');
+    try {
+      await api.post('/groups', newGroup);
+      alert("Group created successfully!");
+      navigate('/find-group');
+    } catch (error) {
+      console.error('Error creating group:', error);
+      alert("Failed to create group. Please check connection and try again.");
+    }
   };
 
   return (
     <>
       <style>{styles}</style>
       <div className="create-group-container">
-        <button className="back-btn" onClick={() => navigate('/')}>
-          <ArrowLeft size={24} />
-        </button>
+
 
         <header style={{ marginBottom: '3rem' }}>
           <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Create Project Group</h1>
