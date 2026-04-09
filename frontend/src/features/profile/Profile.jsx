@@ -415,19 +415,19 @@ const Profile = () => {
 
   // Apply dark background to the full page while this component is mounted
   useEffect(() => {
-    const prevBg    = document.body.style.backgroundColor;
+    const prevBg = document.body.style.backgroundColor;
     const prevImage = document.body.style.backgroundImage;
     const prevAttch = document.body.style.backgroundAttachment;
 
-    document.body.style.backgroundColor    = '#0f172a';
-    document.body.style.backgroundImage    =
+    document.body.style.backgroundColor = '#0f172a';
+    document.body.style.backgroundImage =
       'radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%), ' +
       'radial-gradient(circle at 85% 30%, rgba(192, 132, 252, 0.15), transparent 25%)';
     document.body.style.backgroundAttachment = 'fixed';
 
     return () => {
-      document.body.style.backgroundColor    = prevBg;
-      document.body.style.backgroundImage    = prevImage;
+      document.body.style.backgroundColor = prevBg;
+      document.body.style.backgroundImage = prevImage;
       document.body.style.backgroundAttachment = prevAttch;
     };
   }, []);

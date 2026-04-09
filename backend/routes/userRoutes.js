@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   getSeniors,
+  getStudents,
   getUserProfile,
   updateUserProfile,
   getUserById,
@@ -10,6 +11,9 @@ const { protect } = require('../middleware/auth');
 
 // GET /api/users/seniors — list all seniors
 router.get('/seniors', protect, getSeniors);
+
+// GET /api/users/students — list all students
+router.get('/students', protect, getStudents);
 
 // GET /api/users/profile — get own profile
 router.get('/profile', protect, getUserProfile);
