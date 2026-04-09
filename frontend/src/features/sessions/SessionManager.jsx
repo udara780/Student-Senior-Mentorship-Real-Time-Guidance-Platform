@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, parseISO, isToday } from 'date-fns';
 import { ChevronLeft, ChevronRight, Search, Filter, User, Video, Calendar as CalendarIcon, ExternalLink } from 'lucide-react';
 import api from '../../services/api';
+import toast from 'react-hot-toast';
 import { AuthContext } from '../../context/AuthContext';
 import { Card } from '../../components/Card';
 import { Modal } from '../../components/Modal';
@@ -21,6 +22,7 @@ export default function SessionManager() {
   // Meeting Modal State
   const [isMeetingModalOpen, setIsMeetingModalOpen] = useState(false);
   const [sessionToJoin, setSessionToJoin] = useState(null);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(monthStart);
@@ -62,7 +64,33 @@ export default function SessionManager() {
        return isSameDay(parseISO(session.availability.date), day);
     });
   };
-  
+  // ── Send meeting link email to student (non-blocking) ────────────────────
+  const sendMeetingEmailToStudent = async (session, teamsUrl) => {
+    if (!session?.student?.email) {
+      toast('No student email found — link not sent.', { icon: '⚠️' });
+      return;
+    }
+    setIsSendingEmail(true);
+    try {
+      const sessionTime = session.availability
+        ? `${session.availability.date ? new Date(session.availability.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : ''} · ${session.availability.startTime || ''} – ${session.availability.endTime || ''}`
+        : 'Session time not specified';
+
+      await api.post('/email/send-meeting-link', {
+        studentEmail: session.student.email,
+        studentName: session.student.name || 'Student',
+        meetingLink: teamsUrl,
+        sessionTime,
+      });
+      toast.success('Meeting link sent to ' + (session.student.name || 'student') + '!');
+    } catch (err) {
+      console.error('Email send failed:', err);
+      toast.error('Failed to email the student. The meeting is still open.');
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   // Filtering & Sorting logic
   const filterSessions = (data) => {
     return data
@@ -298,15 +326,19 @@ export default function SessionManager() {
             <Button 
               variant="primary"
               className="shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2 group"
+              disabled={isSendingEmail}
               onClick={() => {
-                // Here we would typically open the Teams link
                 const teamsUrl = sessionToJoin?.meetingLink || 'https://teams.microsoft.com/l/meetup-join/...';
+                // 1. Open Teams immediately — never block this
                 window.open(teamsUrl, '_blank');
+                // 2. Close modal
                 setIsMeetingModalOpen(false);
+                // 3. Send email to student asynchronously (non-blocking)
+                sendMeetingEmailToStudent(sessionToJoin, teamsUrl);
               }}
             >
               <ExternalLink size={18} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-              Open Teams
+              {isSendingEmail ? 'Sending...' : 'Open Teams'}
             </Button>
           </>
         )}
