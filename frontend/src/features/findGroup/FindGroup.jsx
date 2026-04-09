@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Filter, Users, BookOpen, Code, ChevronRight, ChevronLeft, User, PlusCircle, Star, CheckCircle2, UserPlus } from 'lucide-react';
 import api from '../../services/api';
+import { AuthContext } from '../../context/AuthContext';
 
 const styles = `
 .find-group-container {
@@ -242,24 +243,6 @@ const styles = `
   color: #94a3b8;
 }
 
-.back-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 2rem;
-  transition: all 0.3s;
-}
-
-.back-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateX(-5px);
-}
 
 .no-results {
   text-align: center;
@@ -494,7 +477,7 @@ const FindGroup = () => {
   const sliderRef = useRef(null);
   const [groups, setGroups] = useState([]);
   const [profiles, setProfiles] = useState([]);
-  const [currentUser, setCurrentUser] = useState(null);
+  const { user: currentUser } = useContext(AuthContext);
   const [joinRequests, setJoinRequests] = useState([]);
 
   const scrollLeft = () => {
@@ -529,15 +512,23 @@ const FindGroup = () => {
   };
 
   useEffect(() => {
-    // Load datasets from mock databases
-    const savedGroups = JSON.parse(localStorage.getItem('allGroups') || '[]');
+    // Load datasets from mock databases or API
     const savedRequests = JSON.parse(localStorage.getItem('joinRequests') || '[]');
-    const user = JSON.parse(localStorage.getItem('studentProfile'));
-    
-    setGroups(savedGroups);
     setJoinRequests(savedRequests);
-    setCurrentUser(user);
 
+    // Fetch groups from the database
+    const fetchGroups = async () => {
+      try {
+        const response = await api.get('/groups');
+        setGroups(response.data);
+      } catch (error) {
+        console.error('Error fetching groups:', error);
+        setGroups(JSON.parse(localStorage.getItem('allGroups') || '[]'));
+      }
+    };
+    
+    fetchGroups();
+    
     // Fetch students from the database
     const fetchStudents = async () => {
       try {
@@ -571,7 +562,7 @@ const FindGroup = () => {
     const newRequest = {
       id: Date.now(),
       groupId,
-      requesterId: currentUser.studentId,
+      requesterId: currentUser?.studentId || currentUser?._id,
       requesterName: currentUser.name,
       status: 'pending'
     };
@@ -614,9 +605,7 @@ const FindGroup = () => {
     <>
       <style>{styles}</style>
       <div className="find-group-container">
-        <button className="back-btn" onClick={() => navigate('/')}>
-          <ArrowLeft size={24} />
-        </button>
+
 
         <header className="search-header">
           <div>
@@ -652,7 +641,7 @@ const FindGroup = () => {
                     <div className="group-header">
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                         <span className="group-badge">{group.members.length} / {group.maxMembers} Members</span>
-                        {joinRequests.some(r => r.groupId === group.id && r.requesterId === currentUser?.studentId) && (
+                        {joinRequests.some(r => r.groupId === group.id && (r.requesterId === currentUser?.studentId || r.requesterId === currentUser?._id)) && (
                           <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                             <CheckCircle2 size={12} /> Request Pending
                           </span>
@@ -697,7 +686,7 @@ const FindGroup = () => {
                       <div className="progress-fill" style={{ width: `${fillPercentage}%` }}></div>
                     </div>
 
-                    {joinRequests.some(r => r.groupId === group.id && r.requesterId === currentUser?.studentId) ? (
+                    {joinRequests.some(r => r.groupId === group.id && (r.requesterId === currentUser?.studentId || r.requesterId === currentUser?._id)) ? (
                       <button className="join-btn join-btn-sent" disabled>
                         <CheckCircle2 size={18} /> Request Sent
                       </button>

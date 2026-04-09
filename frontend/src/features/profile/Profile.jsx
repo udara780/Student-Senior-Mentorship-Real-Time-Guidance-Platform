@@ -51,26 +51,6 @@ const styles = `
   margin-bottom: 3.5rem;
 }
 
-.back-btn {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  color: white;
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
-}
-
-.back-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateX(-5px);
-  border-color: var(--primary);
-}
 
 .header-text h1 {
   font-size: 2.8rem;
@@ -615,9 +595,7 @@ const Profile = () => {
 
       <div className="profile-container animate-fade-in">
         <div className="profile-header">
-          <button type="button" className="back-btn" onClick={() => navigate(-1)} title="Go Back">
-            <ArrowLeft size={24} />
-          </button>
+
           <div className="header-text">
             <h1>Student Portal</h1>
             <p>Academic Profile & Group Management</p>

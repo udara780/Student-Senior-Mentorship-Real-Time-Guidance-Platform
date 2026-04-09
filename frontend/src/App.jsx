@@ -82,6 +82,7 @@ function App() {
           </ProtectedRoute>
         }>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/profile/setup" element={<Profile />} />
           <Route path="/create-group" element={<CreateGroup />} />
           <Route path="/find-group" element={<FindGroup />} />

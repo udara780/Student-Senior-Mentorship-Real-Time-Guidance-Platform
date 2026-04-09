@@ -27,6 +27,7 @@ app.use('/uploads', express.static('uploads'));
 // Routes (to be added as we implement each phase)
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/groups', require('./routes/groupRoutes'));
 app.use('/api/availability', require('./routes/availabilityRoutes'));
 app.use('/api/requests', require('./routes/requestRoutes'));
 app.use('/api/chats', require('./routes/chatRoutes'));
