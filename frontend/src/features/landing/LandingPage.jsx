@@ -1,61 +1,173 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '../../components/Card';
-import { GraduationCap, Briefcase } from 'lucide-react';
-import campusImg from '../../assets/campus.png';
+import gsap from 'gsap';
+import heroImg from '../../assets/hero.png';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const containerRef = useRef(null);
+  const imgRef = useRef(null);
+  const textContainerRef = useRef(null);
+  const indicatorRef = useRef(null);
+
+  const [canScroll, setCanScroll] = useState(false);
+  const isNavigatingRef = useRef(false);
+
+  useEffect(() => {
+    // We will manually split the text for staggered animation
+    const letters = textContainerRef.current.children;
+
+    // 1. Initial Timeline setup
+    const tl = gsap.timeline({
+      onComplete: () => {
+        setTimeout(() => setCanScroll(true), 500);
+      }
+    });
+
+    // Reset initial states for 3D Entrance
+    gsap.set(containerRef.current, { perspective: 1000 });
+    gsap.set(imgRef.current, { z: -800, rotationX: 45, rotationY: -30, opacity: 0, scale: 0.5 });
+    gsap.set(letters, { y: 100, opacity: 0, rotationX: -90 });
+
+    // Image 3D fly-in with elastic easing
+    tl.to(imgRef.current, {
+      z: 0,
+      rotationX: 0,
+      rotationY: 0,
+      opacity: 1,
+      scale: 1,
+      duration: 2,
+      ease: "elastic.out(1, 0.5)"
+    })
+      // Text Letters staggered flip-up
+      .to(letters, {
+        y: 0,
+        opacity: 1,
+        rotationX: 0,
+        duration: 1,
+        stagger: 0.08,
+        ease: "back.out(1.7)"
+      }, "-=1.5");
+
+    // Ambient floating on the image (separate tween to not block timeline completion)
+    const floatTween = gsap.to(imgRef.current, {
+      y: -15,
+      rotationZ: 2,
+      duration: 3,
+      ease: "sine.inOut",
+      yoyo: true,
+      repeat: -1,
+      delay: 2 // Start smoothly after entrance
+    });
+
+    return () => {
+      tl.kill();
+      floatTween.kill();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!canScroll || isNavigatingRef.current) return;
+
+    const handleScroll = (e) => {
+      // DeltaY > 20 captures mouse wheel pushes
+      if (e.deltaY > 20) initiateTransition();
+    };
+
+    let touchStartY = 0;
+    const handleTouchStart = (e) => { touchStartY = e.changedTouches[0].screenY; };
+    const handleTouchEnd = (e) => {
+      // 50px buffer for swipe-up gestures
+      if (touchStartY - e.changedTouches[0].screenY > 50) initiateTransition();
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'Enter') initiateTransition();
+    };
+
+    window.addEventListener('wheel', handleScroll);
+    window.addEventListener('touchstart', handleTouchStart);
+    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('wheel', handleScroll);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [canScroll]);
+
+  const initiateTransition = () => {
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+    
+    // Explicitly hide indicator via GSAP instead of triggering a React Rerender with state
+    if (indicatorRef.current) {
+        gsap.to(indicatorRef.current, { opacity: 0, duration: 0.2 });
+    }
+
+    const exitTl = gsap.timeline({
+      onComplete: () => {
+        navigate('/login');
+      }
+    });
+
+    // Exit Animation: Swipe the entire landing page upwards
+    exitTl.to(containerRef.current, {
+      y: "-100vh", // Use absolute vh to ensure it clears the screen definitively
+      duration: 0.8,
+      ease: "power3.inOut"
+    });
+  };
+
+  // Text we want to animate individually
+  const title = "TeamUp";
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden p-6 animate-fade-in">
-      {/* Immersive Campus Background */}
-      <div 
-        className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-1000 scale-105"
-        style={{ backgroundImage: `url(${campusImg})` }}
-      />
-      
-      {/* Sophisticated Overlays */}
-      <div className="absolute inset-0 z-10 bg-gradient-to-br from-slate-900/40 via-slate-900/60 to-slate-950/80 backdrop-blur-[2px]" />
-      <div className="absolute top-0 left-0 w-full h-full z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50vw] h-[50vw] bg-primary-500/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[40vw] h-[40vw] bg-teal-500/10 rounded-full blur-[100px]" />
+    <div
+      ref={containerRef}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#0F172A] overflow-hidden select-none transition-colors cursor-pointer"
+      onClick={() => initiateTransition()}
+    >
+      <div
+        className="flex flex-col items-center justify-center gap-8 w-full pointer-events-none"
+      >
+        <img
+          ref={imgRef}
+          src={heroImg}
+          alt="TeamUp Logo"
+          className="w-40 md:w-56 lg:w-64 drop-shadow-[0_0_35px_rgba(59,130,246,0.4)]"
+          style={{ transformStyle: 'preserve-3d' }}
+        />
+
+        <h1
+          ref={textContainerRef}
+          className="flex text-5xl md:text-7xl font-bold tracking-tight text-transparent drop-shadow-[0_0_15px_rgba(99,102,241,0.5)] font-heading"
+          style={{ perspective: 1000 }}
+        >
+          {title.split('').map((char, i) => (
+            <span
+              key={i}
+              className="inline-block bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500"
+              style={{ transformOrigin: '50% 100%' }}
+            >
+              {char === " " ? "\u00A0" : !!char ? char : ""}
+            </span>
+          ))}
+        </h1>
       </div>
 
-      <div className="w-full max-w-4xl animate-slide-up relative z-20">
-        <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight drop-shadow-2xl">
-            <span className="bg-gradient-to-r from-white via-primary-100 to-white bg-clip-text text-transparent">Guidance Platform</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-slate-100 font-medium max-w-2xl mx-auto drop-shadow-md opacity-90">
-            Connect with verified seniors to guide your future, or share your experience as a mentor.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card 
-            className="flex flex-col items-center justify-center p-12 text-center cursor-pointer hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 border border-white/20 hover:border-primary-400 group bg-white/10 backdrop-blur-md shadow-2xl"
-            onClick={() => alert("Student flow is planned for the next major release Phase!")}
-          >
-            <div className="w-24 h-24 bg-primary-400/20 group-hover:bg-primary-400/30 text-white rounded-full flex items-center justify-center mb-6 transition-all duration-300 shadow-xl border border-white/20">
-              <GraduationCap size={48} />
-            </div>
-            <h2 className="text-3xl font-bold text-white mb-3">As a Student</h2>
-            <p className="text-slate-200 font-medium">Find verified seniors and request 1-on-1 mentorship sessions.</p>
-          </Card>
-
-          <Card 
-            className="flex flex-col items-center justify-center p-12 text-center cursor-pointer hover:-translate-y-2 hover:shadow-2xl transition-all duration-500 border border-white/20 hover:border-teal-400 group bg-white/10 backdrop-blur-md shadow-2xl"
-            onClick={() => navigate('/register')}
-          >
-            <div className="w-24 h-24 bg-teal-400/20 group-hover:bg-teal-400/30 text-white rounded-full flex items-center justify-center mb-6 transition-all duration-300 shadow-xl border border-white/20">
-              <Briefcase size={48} />
-            </div>
-            <h2 className="text-3xl font-bold text-white mb-3">As a Senior</h2>
-            <p className="text-slate-200 font-medium">Share your invaluable experience and guide the next generation.</p>
-          </Card>
+      {/* Scroll indicator */}
+      <div
+        ref={indicatorRef}
+        className={`absolute bottom-12 text-slate-400/60 text-sm tracking-widest uppercase transition-opacity duration-1000 pointer-events-none ${canScroll ? 'opacity-100' : 'opacity-0'}`}
+      >
+        <div className="flex flex-col items-center gap-2">
+          <span>Click anywhere to Explore</span>
+          <div className="w-[1px] h-8 bg-gradient-to-b from-slate-400/60 to-transparent animate-pulse" />
         </div>
       </div>
     </div>
   );
 }
+

@@ -1,8 +1,8 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import logoImg from '../assets/hero.png';
 import { AuthContext } from '../context/AuthContext';
-import { LogOut, X } from 'lucide-react';
+import { LogOut, X, User, ChevronDown, LayoutDashboard } from 'lucide-react';
 
 const styles = `
 .navbar-container {
@@ -110,28 +110,6 @@ const styles = `
   width: 100%;
 }
 
-.logout-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1.1rem;
-  background: transparent;
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  border-radius: 10px;
-  color: #f87171;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  font-family: 'Poppins', sans-serif;
-}
-
-.logout-btn:hover {
-  background: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.6);
-  color: #fca5a5;
-  transform: translateY(-1px);
-}
 
 .mobile-menu-btn {
   display: none;
@@ -283,11 +261,148 @@ const styles = `
   transform: translateY(-1px);
   box-shadow: 0 8px 24px rgba(239,68,68,0.45);
 }
+
+/* ── Profile Avatar & Dropdown ───────────────────────────────────────────── */
+.nav-avatar-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nav-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #a855f7 100%);
+  border: 2px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+}
+
+.nav-avatar:hover {
+  border-color: rgba(168,85,247,0.7);
+  box-shadow: 0 0 0 4px rgba(168,85,247,0.15);
+  transform: scale(1.05);
+}
+
+.nav-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nav-avatar-initials {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+.nav-avatar-chevron {
+  color: #94a3b8;
+  margin-left: 4px;
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.nav-avatar-chevron.open {
+  transform: rotate(180deg);
+}
+
+.nav-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  min-width: 220px;
+  background: rgba(15, 23, 42, 0.97);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+  overflow: hidden;
+  animation: dropdownIn 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 9999;
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1);    }
+}
+
+.nav-dropdown-header {
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.nav-dropdown-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-dropdown-email {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  font-family: 'Poppins', sans-serif;
+  text-decoration: none;
+}
+
+.nav-dropdown-item:hover {
+  background: rgba(255,255,255,0.04);
+  color: #e2e8f0;
+}
+
+.nav-dropdown-item.danger {
+  color: #f87171;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.nav-dropdown-item.danger:hover {
+  background: rgba(239,68,68,0.08);
+  color: #fca5a5;
+}
+
+@keyframes navPulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(15,23,42,0.9), 0 0 0 4px rgba(239,68,68,0); }
+  50%       { box-shadow: 0 0 0 2px rgba(15,23,42,0.9), 0 0 0 6px rgba(239,68,68,0.35); }
+}
 `;
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   // AuthContext may be undefined on public pages — safe fallback
@@ -306,8 +421,51 @@ const Navbar = () => {
   const confirmLogout = () => {
     if (logout) logout();
     setShowLogoutModal(false);
+    setShowDropdown(false);
     navigate('/register');
   };
+
+  // Get user initials for avatar fallback
+  const getInitials = (name) => {
+    if (!name) return '?';
+    const parts = name.trim().split(' ');
+    return parts.length === 1
+      ? parts[0][0].toUpperCase()
+      : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Fetch pending request count for senior users
+  useEffect(() => {
+    if (user?.role !== 'senior') return;
+    const fetchPending = async () => {
+      try {
+        const token = sessionStorage.getItem('token');
+        const res = await fetch('/api/requests/incoming', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const pending = data.filter(r => r.status === 'pending').length;
+          setPendingCount(pending);
+        }
+      } catch (_) {}
+    };
+    fetchPending();
+    // Re-check every 60 seconds
+    const interval = setInterval(fetchPending, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   return (
     <>
@@ -327,20 +485,91 @@ const Navbar = () => {
             <NavLink to="/profile/setup" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={closeMenu}>Edit Profile</NavLink>
             <NavLink to="/create-group" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={closeMenu}>Create Group</NavLink>
             <NavLink to="/find-group" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={closeMenu}>Find Group</NavLink>
-            <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={closeMenu}>Request Mentor</NavLink>
-
-            {/* Logout button — only shown when user is logged in */}
-            {user && (
-              <button
-                className="logout-btn"
-                onClick={() => { closeMenu(); setShowLogoutModal(true); }}
-                title="Log out"
+            <NavLink to="/mentors" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={closeMenu}>Request Mentor</NavLink>
+            {user?.role === 'senior' && (
+              <NavLink
+                to="/inbox"
+                className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+                onClick={closeMenu}
+                style={{ position: 'relative' }}
               >
-                <LogOut size={16} />
-                Logout
-              </button>
+                Inbox
+                {pendingCount > 0 && (
+                  <span style={{
+                    position: 'absolute',
+                    top: '-6px',
+                    right: '-10px',
+                    background: '#ef4444',
+                    color: 'white',
+                    borderRadius: '50%',
+                    width: '18px',
+                    height: '18px',
+                    fontSize: '0.65rem',
+                    fontWeight: '800',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 0 0 2px rgba(15,23,42,0.9)',
+                    animation: 'navPulse 2s infinite',
+                  }}>
+                    {pendingCount > 9 ? '9+' : pendingCount}
+                  </span>
+                )}
+              </NavLink>
             )}
           </div>
+
+          {/* ── Profile Avatar (top-right, always visible when logged in) ── */}
+          {user && (
+            <div className="nav-avatar-wrapper" ref={dropdownRef}>
+              <div
+                className="nav-avatar"
+                onClick={() => setShowDropdown(v => !v)}
+                title={user.name}
+              >
+                {user.profilePhoto ? (
+                  <img src={`/${user.profilePhoto}`} alt={user.name} />
+                ) : (
+                  <span className="nav-avatar-initials">{getInitials(user.name)}</span>
+                )}
+              </div>
+              <ChevronDown
+                size={14}
+                className={`nav-avatar-chevron ${showDropdown ? 'open' : ''}`}
+                onClick={() => setShowDropdown(v => !v)}
+              />
+
+              {/* Dropdown */}
+              {showDropdown && (
+                <div className="nav-dropdown">
+                  {/* User info header */}
+                  <div className="nav-dropdown-header">
+                    <div className="nav-dropdown-name">{user.name}</div>
+                    <div className="nav-dropdown-email">{user.email}</div>
+                  </div>
+
+                  {/* Dashboard */}
+                  <NavLink
+                    to="/dashboard"
+                    className="nav-dropdown-item"
+                    onClick={() => setShowDropdown(false)}
+                  >
+                    <LayoutDashboard size={15} />
+                    Dashboard
+                  </NavLink>
+
+                  {/* Logout */}
+                  <button
+                    className="nav-dropdown-item danger"
+                    onClick={() => { setShowDropdown(false); setShowLogoutModal(true); }}
+                  >
+                    <LogOut size={15} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </nav>
 
