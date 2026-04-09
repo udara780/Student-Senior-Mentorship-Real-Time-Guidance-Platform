@@ -225,6 +225,7 @@ body {
   height: 220px;
   overflow: hidden;
   flex-shrink: 0;
+  background: var(--bg-dark);
 }
 
 .widget-image {
@@ -367,9 +368,9 @@ const Home = () => {
                 <div className="widgets-grid">
 
                     {/* Edit Profile Widget */}
-                    <div className="widget glass-panel animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                    <div className="widget glass-panel">
                         <div className="widget-image-container">
-                            <img src={profileImg} alt="Edit Profile" className="widget-image" />
+                            <img src={profileImg} alt="Edit Profile" className="widget-image" loading="eager" fetchPriority="high" decoding="sync" />
                         </div>
                         <div className="widget-content">
                             <h2 className="widget-title">Edit Profile</h2>
@@ -379,9 +380,9 @@ const Home = () => {
                     </div>
 
                     {/* Create Group Widget */}
-                    <div className="widget glass-panel animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                    <div className="widget glass-panel">
                         <div className="widget-image-container">
-                            <img src={createGroupImg} alt="Create Group" className="widget-image" />
+                            <img src={createGroupImg} alt="Create Group" className="widget-image" loading="eager" fetchPriority="high" decoding="sync" />
                         </div>
                         <div className="widget-content">
                             <h2 className="widget-title">Create Group</h2>
@@ -391,9 +392,9 @@ const Home = () => {
                     </div>
 
                     {/* Find a Group Widget */}
-                    <div className="widget glass-panel animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                    <div className="widget glass-panel">
                         <div className="widget-image-container">
-                            <img src={findGroupImg} alt="Find a Group" className="widget-image" />
+                            <img src={findGroupImg} alt="Find a Group" className="widget-image" loading="eager" fetchPriority="high" decoding="sync" />
                         </div>
                         <div className="widget-content">
                             <h2 className="widget-title">Find a Group</h2>
@@ -403,9 +404,9 @@ const Home = () => {
                     </div>
 
                     {/* Request Mentor Widget */}
-                    <div className="widget glass-panel animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                    <div className="widget glass-panel">
                         <div className="widget-image-container">
-                            <img src={mentorImg} alt="Request Mentor" className="widget-image" />
+                            <img src={mentorImg} alt="Request Mentor" className="widget-image" loading="eager" fetchPriority="high" decoding="sync" />
                         </div>
                         <div className="widget-content">
                             <h2 className="widget-title">Request Mentor</h2>
