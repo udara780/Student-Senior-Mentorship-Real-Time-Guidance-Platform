@@ -586,7 +586,7 @@ const Navbar = () => {
                 title={user.name}
               >
                 {user.profilePhoto ? (
-                  <img src={`/${user.profilePhoto}`} alt={user.name} />
+                  <img src={user.profilePhoto} alt={user.name} />
                 ) : (
                   <span className="nav-avatar-initials">{getInitials(user.name)}</span>
                 )}

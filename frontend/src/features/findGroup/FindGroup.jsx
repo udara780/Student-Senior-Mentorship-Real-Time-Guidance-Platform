@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Filter, Users, BookOpen, Code, ChevronRight, ChevronLeft, User, PlusCircle, Star, CheckCircle2, UserPlus } from 'lucide-react';
+import { ArrowLeft, Search, Filter, Users, BookOpen, Code, ChevronRight, ChevronLeft, User, PlusCircle, Star, CheckCircle2, UserPlus, X, Hash, Mail, Award, GraduationCap } from 'lucide-react';
 import api from '../../services/api';
+import toast from 'react-hot-toast';
 import { AuthContext } from '../../context/AuthContext';
 import ygroupsImg from '../../assets/ygroups.png';
 
@@ -529,14 +530,195 @@ const styles = `
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Profile Modal Overlay */
+.profile-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  justify-content: flex-end;
+  animation: fadeInModal 0.3s ease;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.profile-modal-panel {
+  width: 100%;
+  max-width: 420px;
+  background: #0f172a;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: -10px 0 40px rgba(0,0,0,0.5);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow-y: auto;
+  position: relative;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.profile-modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 10;
+}
+
+.profile-modal-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.profile-modal-content {
+  padding: 2rem 1.5rem;
+}
+
+.pm-avatar-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.pm-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #a855f7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 4px solid rgba(255,255,255,0.1);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+}
+
+.pm-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pm-initials {
+  font-size: 3rem;
+  font-weight: 800;
+  color: white;
+}
+
+.pm-name {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #f1f5f9;
+  margin: 0 0 0.5rem 0;
+}
+
+.pm-id {
+  text-align: center;
+  color: #3b82f6;
+  font-weight: 600;
+  margin: 0 0 2rem 0;
+  font-size: 1rem;
+}
+
+.pm-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.pm-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #94a3b8;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pm-info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.8rem;
+  font-size: 0.95rem;
+}
+.pm-info-row:last-child {
+  margin-bottom: 0;
+}
+
+.pm-label {
+  color: #94a3b8;
+}
+
+.pm-value {
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.pm-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pm-skill-tag {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.pm-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  border-top-color: #3b82f6;
+  animation: spin 1s ease-in-out infinite;
+  margin: 3rem auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
 `;
 
-const MiniProfileCard = ({ studentId, fallbackName, isLeader, profiles }) => {
-  const profileData = profiles.find(p => p.studentId === studentId);
+const MiniProfileCard = ({ studentId, fallbackName, isLeader, profiles, onClick }) => {
+  // Match by human-readable studentId OR MongoDB _id (when stored as fallback)
+  const profileData = profiles.find(
+    p => p.studentId === studentId || p._id?.toString() === studentId
+  );
   
   // Use connected profile if available, else group baseline fallback
   const displayName = profileData?.name || fallbackName || 'Unknown Student';
-  const displayId = profileData ? studentId : (studentId || 'Profile not available');
+  // Show the readable studentId if available, otherwise a short truncated id
+  const rawDisplayId = profileData?.studentId || studentId || '';
+  const isObjectId = /^[a-f\d]{24}$/i.test(rawDisplayId);
+  const displayId = isObjectId ? `ID: ${rawDisplayId.slice(-8)}…` : rawDisplayId;
   
   const getInitials = (n) => {
     if (!n || n === 'Unknown' || n.trim() === '') return '?';
@@ -549,8 +731,17 @@ const MiniProfileCard = ({ studentId, fallbackName, isLeader, profiles }) => {
   };
 
   return (
-    <div className={`mini-profile-card ${isLeader ? 'leader-card' : ''}`}>
-       <div className="mini-avatar">{getInitials(displayName)}</div>
+    <div 
+      className={`mini-profile-card ${isLeader ? 'leader-card' : ''}`}
+      onClick={() => onClick && onClick(studentId)}
+    >
+       <div className="mini-avatar" style={{ overflow: 'hidden' }}>
+         {profileData?.profilePhoto ? (
+            <img src={profileData.profilePhoto} alt={displayName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+         ) : (
+            getInitials(displayName)
+         )}
+       </div>
        <div className="mini-details">
           <p className="mini-name">{displayName}</p>
           <p className="mini-id">{displayId}</p>
@@ -569,6 +760,33 @@ const FindGroup = () => {
   const [joinRequests, setJoinRequests] = useState([]);
   const [showJoinedGroups, setShowJoinedGroups] = useState(false);
   const dropdownRef = useRef(null);
+
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [fetchedProfile, setFetchedProfile] = useState(null);
+
+  const handleProfileClick = async (studentId) => {
+    // Match by human-readable studentId OR by MongoDB _id (fallback when studentId is unset)
+    const prof = profiles.find(
+      p => p.studentId === studentId || p._id?.toString() === studentId
+    );
+    if (!prof) {
+      toast.error('Profile not found.');
+      return;
+    }
+    setShowProfileModal(true);
+    setFetchedProfile(null);
+    setIsProfileLoading(true);
+    try {
+      const response = await api.get(`/users/${prof._id}`);
+      setFetchedProfile(response.data);
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to load profile details.');
+    } finally {
+      setIsProfileLoading(false);
+    }
+  };
 
   const scrollLeft = () => {
     if (sliderRef.current) {
@@ -811,6 +1029,7 @@ const FindGroup = () => {
                         fallbackName={member.name}
                         isLeader={member.studentId === group.leaderId}
                         profiles={profiles}
+                        onClick={handleProfileClick}
                       />
                     ))}
                   </div>
@@ -882,10 +1101,14 @@ const FindGroup = () => {
                       </span>
                       
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', marginBottom: '1.5rem', marginTop: '0.5rem' }}>
-                        <div className="member-avatar" style={{ margin: 0, width: '64px', height: '64px', fontSize: '1.5rem', flexShrink: 0 }}>
-                          {getGlobalInitials(profile.name)}
+                        <div className="member-avatar" style={{ margin: 0, width: '64px', height: '64px', fontSize: '1.5rem', flexShrink: 0, cursor: 'pointer', overflow: 'hidden' }} onClick={() => handleProfileClick(profile.studentId)}>
+                          {profile.profilePhoto ? (
+                            <img src={profile.profilePhoto} alt={profile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            getGlobalInitials(profile.name)
+                          )}
                         </div>
-                        <div style={{ textAlign: 'left' }}>
+                        <div style={{ textAlign: 'left', cursor: 'pointer' }} onClick={() => handleProfileClick(profile.studentId)}>
                           <h3 style={{ fontSize: '1.3rem', margin: '0 0 0.3rem 0', color: '#f8fafc', fontWeight: 700 }}>{profile.name || 'Unknown Student'}</h3>
                           <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem' }}>{profile.studentId || 'ID Not Available'}</p>
                         </div>
@@ -915,6 +1138,89 @@ const FindGroup = () => {
             <User size={48} color="#94a3b8" style={{ marginBottom: '1rem' }} />
             <h3>No members found</h3>
             <p style={{ color: '#94a3b8' }}>Try adjusting your search criteria!</p>
+          </div>
+        )}
+
+        {/* Profile Modal Overlay */}
+        {showProfileModal && (
+          <div className="profile-modal-overlay" onClick={() => setShowProfileModal(false)}>
+            <div className="profile-modal-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="profile-modal-header">
+                <h3 className="profile-modal-title">Student Profile</h3>
+                <button 
+                  onClick={() => setShowProfileModal(false)}
+                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex' }}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              {isProfileLoading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                  <div className="pm-spinner"></div>
+                </div>
+              ) : fetchedProfile ? (
+                <div className="profile-modal-content">
+                  <div className="pm-avatar-container">
+                    <div className="pm-avatar">
+                      {fetchedProfile.profilePhoto ? (
+                        <img src={fetchedProfile.profilePhoto} alt={fetchedProfile.name} />
+                      ) : (
+                        <span className="pm-initials">{getGlobalInitials(fetchedProfile.name)}</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <h2 className="pm-name">{fetchedProfile.name}</h2>
+                  <p className="pm-id">{fetchedProfile.studentId || 'No ID assigned'}</p>
+
+                  <div className="pm-section">
+                    <h4 className="pm-section-title"><User size={18} /> Academic Details</h4>
+                    <div className="pm-info-row">
+                      <span className="pm-label">Email</span>
+                      <span className="pm-value">{fetchedProfile.email}</span>
+                    </div>
+                    <div className="pm-info-row">
+                      <span className="pm-label">Year</span>
+                      <span className="pm-value">{fetchedProfile.academicYear || 'Not specified'}</span>
+                    </div>
+                    <div className="pm-info-row">
+                      <span className="pm-label">Semester</span>
+                      <span className="pm-value">{fetchedProfile.semester || 'Not specified'}</span>
+                    </div>
+                    {fetchedProfile.gpa !== undefined && (
+                      <div className="pm-info-row">
+                        <span className="pm-label">GPA</span>
+                        <span className="pm-value" style={{ color: '#3b82f6' }}>{fetchedProfile.gpa.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pm-section">
+                    <h4 className="pm-section-title"><BookOpen size={18} /> Skills & Expertise</h4>
+                    {fetchedProfile.skills && fetchedProfile.skills.length > 0 ? (
+                      <div className="pm-skills">
+                        {fetchedProfile.skills.map((skill, idx) => (
+                          <span key={idx} className="pm-skill-tag">{skill}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p style={{ color: '#64748b', fontSize: '0.9rem', margin: 0, fontStyle: 'italic' }}>No skills listed</p>
+                    )}
+                  </div>
+                  
+                  {fetchedProfile.interestedInMentorship && (
+                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '1rem', borderRadius: '12px', textAlign: 'center', color: '#34d399', fontSize: '0.9rem', fontWeight: 600, marginTop: '2rem' }}>
+                      ✓ Open to Mentorship
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', color: '#ef4444', marginTop: '3rem' }}>
+                  Failed to load profile details.
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

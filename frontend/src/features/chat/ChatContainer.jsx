@@ -156,7 +156,7 @@ export default function ChatContainer() {
                     <div className="relative">
                       <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0 overflow-hidden border border-primary-200 dark:border-primary-800">
                         {other?.profilePhoto
-                          ? <img src={`/${other.profilePhoto}`} alt={other?.name} className="w-full h-full object-cover" />
+                          ? <img src={other.profilePhoto} alt={other?.name} className="w-full h-full object-cover" />
                           : <User size={20} className="text-primary-500 dark:text-primary-400" />
                         }
                       </div>
@@ -202,7 +202,7 @@ export default function ChatContainer() {
             <div className="p-4 border-b border-slate-100 dark:border-slate-700/60 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md shadow-sm z-10 flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center overflow-hidden border border-primary-200 dark:border-primary-800 flex-shrink-0">
                 {otherPerson?.profilePhoto
-                  ? <img src={`/${otherPerson.profilePhoto}`} alt={otherPerson?.name} className="w-full h-full object-cover" />
+                  ? <img src={otherPerson.profilePhoto} alt={otherPerson?.name} className="w-full h-full object-cover" />
                   : <User size={20} className="text-primary-500 dark:text-primary-400" />
                 }
               </div>
@@ -239,7 +239,7 @@ export default function ChatContainer() {
                       {!mine && (
                         <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0 overflow-hidden border border-primary-100 dark:border-primary-900 self-end mb-0.5">
                           {senderPhoto
-                            ? <img src={`/${senderPhoto}`} alt={senderName} className="w-full h-full object-cover" />
+                            ? <img src={senderPhoto} alt={senderName} className="w-full h-full object-cover" />
                             : <User size={14} className="text-primary-400" />
                           }
                         </div>

@@ -10,7 +10,7 @@ const generateToken = (id) => {
 // @access  Public
 const register = async (req, res) => {
   try {
-    const { name, email, password, role, bio, skills, wantsToBeMentor } = req.body;
+    const { name, email, password, role, skills, wantsToBeMentor } = req.body;
     let profilePhoto = '';
 
     if (req.file) {
@@ -43,7 +43,6 @@ const register = async (req, res) => {
       email,
       password,
       role: finalRole,
-      bio: bio || '',
       skills: skills ? (typeof skills === 'string' ? JSON.parse(skills) : skills) : [],
       profilePhoto: profilePhoto || '',
       mentorStatus,
@@ -60,8 +59,12 @@ const register = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        bio: user.bio,
         skills: user.skills,
+        studentId: user.studentId,
+        academicYear: user.academicYear,
+        semester: user.semester,
+        gpa: user.gpa,
+        interestedInMentorship: user.interestedInMentorship,
         profilePhoto: user.profilePhoto,
         isVerified: user.isVerified,
         mentorStatus: user.mentorStatus,
@@ -103,8 +106,12 @@ const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        bio: user.bio,
         skills: user.skills,
+        studentId: user.studentId,
+        academicYear: user.academicYear,
+        semester: user.semester,
+        gpa: user.gpa,
+        interestedInMentorship: user.interestedInMentorship,
         profilePhoto: user.profilePhoto,
         isVerified: user.isVerified,
         mentorStatus: user.mentorStatus,

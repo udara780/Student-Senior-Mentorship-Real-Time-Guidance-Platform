@@ -74,11 +74,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // True only when the user has filled in bio AND at least one skill
-  const isProfileComplete = !!(user && user.bio && user.bio.trim() && user.skills && user.skills.length > 0);
+  const updateProfilePhoto = async (formData) => {
+    try {
+      const { data } = await api.put('/users/profile/photo', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      // Sync the new photo URL into the in-memory user object
+      setUser((prev) => ({ ...prev, profilePhoto: data.profilePhoto }));
+      toast.success('Profile photo updated!');
+      return { success: true, profilePhoto: data.profilePhoto };
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Failed to upload photo';
+      toast.error(msg);
+      return { success: false, message: msg };
+    }
+  };
+
+  // True only when the user has filled in studentId AND at least one skill
+  const isProfileComplete = !!(user && user.studentId && user.studentId.trim() && user.skills && user.skills.length > 0);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile, isProfileComplete }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile, updateProfilePhoto, isProfileComplete }}>
       {children}
     </AuthContext.Provider>
   );
