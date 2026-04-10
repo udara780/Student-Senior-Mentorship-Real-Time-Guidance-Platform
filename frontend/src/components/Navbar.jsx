@@ -2,7 +2,8 @@ import React, { useState, useContext, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import logoImg from '../assets/hero.png';
 import { AuthContext } from '../context/AuthContext';
-import { LogOut, X, User, ChevronDown, LayoutDashboard } from 'lucide-react';
+import { LogOut, X, User, ChevronDown, LayoutDashboard, Bell } from 'lucide-react';
+import notiBellImg from '../assets/notification-bell.png';
 
 const styles = `
 .navbar-container {
@@ -117,7 +118,62 @@ const styles = `
   border: none;
   color: white;
   font-size: 1.5rem;
-  cursor: pointer;
+  animation: navPulse 2s infinite;
+}
+
+/* Notification Bell Icon Styles */
+.nav-noti-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.5rem;
+  text-decoration: none;
+  color: #94a3b8;
+}
+
+.nav-noti-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+.nav-noti-btn:hover .nav-noti-icon-container {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.nav-noti-btn.active .nav-noti-icon-container {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #818cf8;
+  box-shadow: 0 0 15px rgba(99,102,241,0.2);
+}
+
+.nav-noti-badge {
+  position: absolute;
+  top: 0px;
+  right: -2px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px rgba(15,23,42,0.9);
+  animation: navPulse 2s infinite;
 }
 
 @media (max-width: 768px) {
@@ -489,33 +545,35 @@ const Navbar = () => {
             {user?.role === 'senior' && (
               <NavLink
                 to="/inbox"
-                className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+                className={({ isActive }) => isActive ? 'nav-noti-btn active' : 'nav-noti-btn'}
                 onClick={closeMenu}
-                style={{ position: 'relative' }}
+                title="Mentorship Inbox"
               >
-                Inbox
+                <div className="nav-noti-icon-container">
+                  <Bell size={20} strokeWidth={2.5} />
+                </div>
                 {pendingCount > 0 && (
-                  <span style={{
-                    position: 'absolute',
-                    top: '-6px',
-                    right: '-10px',
-                    background: '#ef4444',
-                    color: 'white',
-                    borderRadius: '50%',
-                    width: '18px',
-                    height: '18px',
-                    fontSize: '0.65rem',
-                    fontWeight: '800',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 0 0 2px rgba(15,23,42,0.9)',
-                    animation: 'navPulse 2s infinite',
-                  }}>
+                  <span className="nav-noti-badge">
                     {pendingCount > 9 ? '9+' : pendingCount}
                   </span>
                 )}
               </NavLink>
+            )}
+            {user?.role === 'student' && (
+              <div
+                className="nav-noti-btn"
+                onClick={closeMenu}
+                style={{ cursor: 'pointer' }}
+                title="Notifications"
+              >
+                <div className="nav-noti-icon-container">
+                  <img 
+                    src={notiBellImg} 
+                    alt="Notifications" 
+                    style={{ width: '20px', height: '20px', objectFit: 'contain' }} 
+                  />
+                </div>
+              </div>
             )}
           </div>
 

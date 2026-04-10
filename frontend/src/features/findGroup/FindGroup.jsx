@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Filter, Users, BookOpen, Code, ChevronRight, ChevronLeft, User, PlusCircle, Star, CheckCircle2, UserPlus } from 'lucide-react';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
+import ygroupsImg from '../../assets/ygroups.png';
 
 const styles = `
 .find-group-container {
@@ -23,10 +24,18 @@ const styles = `
   .search-header { flex-direction: column; align-items: flex-start; }
 }
 
+.search-actions-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  position: relative;
+  max-width: 550px;
+  width: 100%;
+}
+
 .search-bar {
   flex-grow: 1;
   position: relative;
-  max-width: 600px;
 }
 
 .search-icon {
@@ -41,7 +50,7 @@ const styles = `
   width: 100%;
   background: rgba(30, 41, 59, 0.5);
   border: 1.5px solid rgba(255, 255, 255, 0.1);
-  padding: 1.2rem 1.2rem 1.2rem 3.5rem;
+  padding: 1.2rem 1.2rem 1.2rem 3.5rem; /* Reverted right padding since icon is external */
   border-radius: 18px;
   color: white;
   font-size: 1.1rem;
@@ -53,6 +62,85 @@ const styles = `
   background: rgba(30, 41, 59, 0.8);
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
   outline: none;
+}
+
+.my-groups-icon-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 10;
+}
+
+.my-groups-icon-btn:hover {
+  background: #3b82f6;
+  border-color: #60a5fa;
+  transform: scale(1.1);
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+}
+
+.joined-groups-dropdown {
+  position: absolute;
+  top: calc(100% + 0.8rem);
+  right: 0;
+  width: 320px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1rem;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.joined-groups-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+.joined-groups-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.joined-group-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.8rem;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  margin-bottom: 0.5rem;
+}
+.joined-group-item:last-child {
+  margin-bottom: 0;
+}
+.joined-group-item:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.joined-group-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: white;
+  flex-shrink: 0;
+  font-size: 1.1rem;
 }
 
 .slider-main {
@@ -479,6 +567,8 @@ const FindGroup = () => {
   const [profiles, setProfiles] = useState([]);
   const { user: currentUser } = useContext(AuthContext);
   const [joinRequests, setJoinRequests] = useState([]);
+  const [showJoinedGroups, setShowJoinedGroups] = useState(false);
+  const dropdownRef = useRef(null);
 
   const scrollLeft = () => {
     if (sliderRef.current) {
@@ -512,10 +602,6 @@ const FindGroup = () => {
   };
 
   useEffect(() => {
-    // Load datasets from mock databases or API
-    const savedRequests = JSON.parse(localStorage.getItem('joinRequests') || '[]');
-    setJoinRequests(savedRequests);
-
     // Fetch groups from the database
     const fetchGroups = async () => {
       try {
@@ -523,7 +609,7 @@ const FindGroup = () => {
         setGroups(response.data);
       } catch (error) {
         console.error('Error fetching groups:', error);
-        setGroups(JSON.parse(localStorage.getItem('allGroups') || '[]'));
+        setGroups([]);
       }
     };
     
@@ -543,13 +629,22 @@ const FindGroup = () => {
         setProfiles(dbStudents);
       } catch (error) {
         console.error('Error fetching students:', error);
-        // Fallback to local storage if API fails
-        const savedProfiles = JSON.parse(localStorage.getItem('allStudents') || '[]');
-        setProfiles(savedProfiles);
+        setProfiles([]);
       }
     };
 
     fetchStudents();
+  }, []);
+
+  // Handle outside click for joined groups dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowJoinedGroups(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleJoinRequest = (groupId) => {
@@ -569,7 +664,6 @@ const FindGroup = () => {
 
     const updatedRequests = [...joinRequests, newRequest];
     setJoinRequests(updatedRequests);
-    localStorage.setItem('joinRequests', JSON.stringify(updatedRequests));
   };
 
   const filteredGroups = groups.filter(g => 
@@ -589,6 +683,10 @@ const FindGroup = () => {
     (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (p.studentId && p.studentId.toString().toLowerCase().includes(searchTerm.toLowerCase())) ||
     (p.skills && Array.isArray(p.skills) ? p.skills.join(' ').toLowerCase().includes(searchTerm.toLowerCase()) : p.skills?.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const joinedGroups = groups.filter(g => 
+    g.members && g.members.some(m => m.studentId === (currentUser?.studentId || currentUser?._id))
   );
 
   const getGlobalInitials = (n) => {
@@ -612,15 +710,55 @@ const FindGroup = () => {
             <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Find a Group</h1>
             <p style={{ color: '#94a3b8' }}>Join existing teams looking for members</p>
           </div>
-          <div className="search-bar">
-            <Search className="search-icon" size={24} />
-            <input 
-              type="text" 
-              className="search-input" 
-              placeholder="Search module name or code..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="search-actions-wrapper" ref={dropdownRef}>
+            <div className="search-bar">
+              <Search className="search-icon" size={24} />
+              <input 
+                type="text" 
+                className="search-input" 
+                placeholder="Search module name or code..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            {/* My Groups Icon Button (External to search input) */}
+            <div 
+              className="my-groups-icon-btn"
+              onClick={() => setShowJoinedGroups(!showJoinedGroups)}
+              title="My Joined"
+            >
+              <img src={ygroupsImg} alt="My Groups" style={{ width: '24px', height: '24px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+            </div>
+
+            {/* My Groups Dropdown */}
+            {showJoinedGroups && (
+              <div className="joined-groups-dropdown">
+                <h4 style={{ margin: '0 0 1rem 0', color: '#f8fafc', fontSize: '1.05rem', fontWeight: 800 }}>My Joined Groups</h4>
+                
+                {joinedGroups.length > 0 ? (
+                  joinedGroups.map(group => (
+                    <div key={group.id} className="joined-group-item">
+                      <div className="joined-group-avatar">
+                        {group.moduleName.substring(0, 2).toUpperCase()}
+                      </div>
+                      <div style={{ flexGrow: 1, overflow: 'hidden' }}>
+                        <h5 style={{ margin: 0, color: '#f8fafc', fontSize: '0.95rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {group.moduleName}
+                        </h5>
+                        <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.8rem' }}>
+                          {group.moduleCode} • {group.members.length}/{group.maxMembers} Members
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '1.5rem', color: '#64748b', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                    <p style={{ margin: 0, fontSize: '0.9rem' }}>You haven't joined any groups yet.</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </header>
 
