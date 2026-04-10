@@ -303,7 +303,7 @@ export default function MentorProfile() {
               <div className="mp-hero">
                 <div className="mp-avatar">
                   {mentor.profilePhoto ? (
-                    <img src={`/${mentor.profilePhoto}`} alt={mentor.name} />
+                    <img src={mentor.profilePhoto} alt={mentor.name} />
                   ) : (
                     <span className="mp-avatar-initials">{getInitials(mentor.name)}</span>
                   )}

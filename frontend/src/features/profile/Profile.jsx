@@ -391,7 +391,7 @@ input:checked + .slider:before {
 const Profile = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-  const { user, updateProfile } = useContext(AuthContext);
+  const { user, updateProfile, updateProfilePhoto } = useContext(AuthContext);
 
   // Apply dark background to the full page while this component is mounted
   useEffect(() => {
@@ -414,16 +414,31 @@ const Profile = () => {
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
-    studentId: '',
+    studentId: user?.studentId || '',
     email: user?.email || '',
-    academicYear: '',
-    semester: '',
-    gpa: '',
+    academicYear: user?.academicYear || '',
+    semester: user?.semester || '',
+    gpa: user?.gpa || '',
     skills: Array.isArray(user?.skills) ? user.skills.join(', ') : '',
-    bio: user?.bio || '',
-    interestedInMentorship: false,
-    profilePic: null
+    interestedInMentorship: user?.interestedInMentorship || false,
+    profilePic: user?.profilePhoto || null
   });
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        name: user.name || '',
+        studentId: user.studentId || '',
+        email: user.email || '',
+        academicYear: user.academicYear || '',
+        semester: user.semester || '',
+        gpa: user.gpa || '',
+        skills: Array.isArray(user.skills) ? user.skills.join(', ') : '',
+        interestedInMentorship: user.interestedInMentorship || false,
+        profilePic: user.profilePhoto || null
+      });
+    }
+  }, [user]);
 
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -550,20 +565,31 @@ const Profile = () => {
       if (photoFile) {
         const fd = new FormData();
         fd.append('profilePhoto', photoFile);
-        await api.put('/users/profile/photo', fd);
+        const photoResult = await updateProfilePhoto(fd);
+        if (!photoResult.success) {
+          setIsSubmitted(false);
+          return;
+        }
       }
 
-      // 2. Save bio + skills to the real backend
+      // 2. Save details to the backend
       const skillsArray = formData.skills
         .split(',')
         .map(s => s.trim())
         .filter(Boolean);
 
-      const result = await updateProfile({
+      const requestPayload = {
         name: formData.name,
-        bio: formData.bio || `${formData.academicYear || ''} student`.trim(),
+        interestedInMentorship: formData.interestedInMentorship,
         skills: skillsArray,
-      });
+      };
+
+      if (formData.studentId) requestPayload.studentId = formData.studentId;
+      if (formData.academicYear) requestPayload.academicYear = formData.academicYear;
+      if (formData.semester) requestPayload.semester = formData.semester;
+      if (formData.gpa !== '') requestPayload.gpa = Number(formData.gpa);
+
+      const result = await updateProfile(requestPayload);
 
       if (result.success) {
         navigate('/dashboard');
@@ -610,7 +636,14 @@ const Profile = () => {
               <div className="avatar-wrapper">
                 <div className="avatar-large">
                   {formData.profilePic ? (
-                    <img src={formData.profilePic} alt="Profile" />
+                    <img
+                      src={
+                        formData.profilePic.startsWith('data:')
+                          ? formData.profilePic
+                          : `http://localhost:5000${formData.profilePic}`
+                      }
+                      alt="Profile"
+                    />
                   ) : (
                     <span className="avatar-initials">{getInitials(formData.name)}</span>
                   )}

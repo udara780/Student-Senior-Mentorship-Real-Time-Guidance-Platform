@@ -20,15 +20,31 @@ const userSchema = new mongoose.Schema(
       required: [true, 'Password is required'],
       minlength: 6,
     },
+    studentId: {
+      type: String,
+      trim: true,
+    },
     role: {
       type: String,
       enum: ['student', 'senior', 'admin'],
-      required: [true, 'Role is required'],
+      default: 'student',
     },
-    bio: {
+    academicYear: {
       type: String,
-      default: '',
-      maxlength: 500,
+      enum: ['Year 1', 'Year 2', 'Year 3', 'Year 4'],
+    },
+    semester: {
+      type: String,
+      enum: ['Semester 1', 'Semester 2'],
+    },
+    gpa: {
+      type: Number,
+      min: 0,
+      max: 4.0,
+    },
+    interestedInMentorship: {
+      type: Boolean,
+      default: false,
     },
     skills: {
       type: [String],
