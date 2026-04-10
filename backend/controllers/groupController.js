@@ -18,7 +18,7 @@ const createGroup = async (req, res) => {
       maxMembers,
       leaderId,
       leaderName,
-      members
+      members: Array.isArray(members) ? members : []
     });
 
     res.status(201).json({
@@ -27,7 +27,7 @@ const createGroup = async (req, res) => {
     });
   } catch (error) {
     console.error('Create group error:', error.message);
-    res.status(500).json({ message: 'Server error creating group' });
+    res.status(500).json({ message: error.message || 'Server error creating group' });
   }
 };
 

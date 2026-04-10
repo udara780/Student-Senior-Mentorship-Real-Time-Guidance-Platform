@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import heroImg from '../../assets/colleagues-reading-from-book-study-session.jpg';
 import profileImg from '../../assets/Screenshot 2026-03-28 040725.png';
@@ -310,20 +310,6 @@ body {
 
 const Home = () => {
     const navigate = useNavigate();
-    const [profile, setProfile] = useState(null);
-
-    useEffect(() => {
-        const saved = localStorage.getItem('studentProfile');
-        if (saved) setProfile(JSON.parse(saved));
-    }, []);
-
-    const getInitials = (name) => {
-        if (!name || typeof name !== 'string') return 'ST';
-        const parts = name.trim().split(/\s+/);
-        if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-        if (parts.length === 1 && parts[0]) return parts[0][0].toUpperCase();
-        return 'ST';
-    };
 
     return (
         <>

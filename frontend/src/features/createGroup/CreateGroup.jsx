@@ -266,7 +266,8 @@ const CreateGroup = () => {
       navigate('/find-group');
     } catch (error) {
       console.error('Error creating group:', error);
-      alert("Failed to create group. Please check connection and try again.");
+      const msg = error.response?.data?.message || 'Failed to create group. Please check connection and try again.';
+      alert(msg);
     }
   };
 
