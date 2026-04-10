@@ -21,6 +21,7 @@ import AdminDashboard from './features/admin/AdminDashboard';
 import UserManagement from './features/admin/UserManagement';
 import MentorList from './features/mentors/MentorList';
 import MentorProfile from './features/mentors/MentorProfile';
+import PublicProfile from './features/profile/PublicProfile';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
@@ -95,6 +96,7 @@ function App() {
           <Route path="/sessions" element={<SessionManager />} />
           <Route path="/mentors" element={<MentorList />} />
           <Route path="/mentors/:mentorId" element={<MentorProfile />} />
+          <Route path="/student/:id" element={<PublicProfile />} />
         </Route>
 
         {/* Admin Routes */}

@@ -245,8 +245,16 @@ export default function SessionManager() {
                           <p className="font-extrabold text-slate-800 dark:text-slate-200">Date: <span className="font-semibold">{format(parseISO(session.availability.date), 'MMM dd, yyyy')}</span> | Time: <span className="font-semibold">{session.availability.startTime} - {session.availability.endTime}</span></p>
                           <p className="font-extrabold text-slate-800 dark:text-slate-200">Mentor: <span className="font-semibold">{session.senior.name} (Senior)</span></p>
                           <p className="font-extrabold text-slate-800 dark:text-slate-200">Student: <span className="font-semibold">{session.student?.name || 'Awaiting'}</span></p>
+                          {session.availability?.assignedStudentId && (
+                            <p className="font-extrabold text-slate-800 dark:text-slate-200">Student IT: <span className="font-semibold text-indigo-600 dark:text-indigo-400">{session.availability.assignedStudentId}</span></p>
+                          )}
                           <p className="font-extrabold text-slate-800 dark:text-slate-200">Topic: <span className="font-semibold">{session.topic || 'General Guidance'}</span></p>
                           <p className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center">Status: <span className="font-semibold ml-1">{getStatusDot('scheduled')} Upcoming</span></p>
+                          {session.availability?.meetingLink && (
+                            <p className="font-extrabold text-slate-800 dark:text-slate-200">
+                              Meeting: <a href={session.availability.meetingLink} target="_blank" rel="noreferrer" className="font-semibold text-indigo-500 hover:underline text-xs break-all">🔗 Join Link</a>
+                            </p>
+                          )}
                         </div>
                         {/* Embedded User Avatars & Button */}
                         <div className="flex justify-between items-center mt-6">
@@ -290,6 +298,9 @@ export default function SessionManager() {
                           <p className="font-extrabold text-slate-800 dark:text-slate-200">Time: <span className="font-semibold">{session.availability.startTime} - {session.availability.endTime}</span></p>
                           <p className="font-extrabold text-slate-800 dark:text-slate-200 truncate">Mentor: <span className="font-semibold">{session.senior.name}</span></p>
                           <p className="font-extrabold text-slate-800 dark:text-slate-200 truncate">Student: <span className="font-semibold">{session.student?.name || 'Unknown'}</span></p>
+                          {session.availability?.assignedStudentId && (
+                            <p className="font-extrabold text-slate-800 dark:text-slate-200 truncate">Student IT: <span className="font-semibold text-indigo-600 dark:text-indigo-400">{session.availability.assignedStudentId}</span></p>
+                          )}
                           <p className="font-extrabold text-slate-800 dark:text-slate-200 truncate">Topic: <span className="font-semibold">{session.topic || 'Guidance Session'}</span></p>
                           <p className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center">Status: <span className="font-semibold ml-1 text-blue-600">Completed</span></p>
                           {session.feedback && <p className="font-extrabold text-slate-800 dark:text-slate-200">Feedback: <span className="font-semibold">{session.feedback}</span></p>}
@@ -328,13 +339,13 @@ export default function SessionManager() {
               className="shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2 group"
               disabled={isSendingEmail}
               onClick={() => {
-                const teamsUrl = sessionToJoin?.meetingLink || 'https://teams.microsoft.com/l/meetup-join/...';
-                // 1. Open Teams immediately — never block this
-                window.open(teamsUrl, '_blank');
+                const meetingUrl = sessionToJoin?.availability?.meetingLink || sessionToJoin?.meetingLink || 'https://meet.jit.si/';
+                // 1. Open meeting immediately
+                window.open(meetingUrl, '_blank');
                 // 2. Close modal
                 setIsMeetingModalOpen(false);
                 // 3. Send email to student asynchronously (non-blocking)
-                sendMeetingEmailToStudent(sessionToJoin, teamsUrl);
+                sendMeetingEmailToStudent(sessionToJoin, meetingUrl);
               }}
             >
               <ExternalLink size={18} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />

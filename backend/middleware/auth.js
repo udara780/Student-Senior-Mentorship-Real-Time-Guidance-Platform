@@ -39,4 +39,14 @@ const requireRole = (...roles) => {
   };
 };
 
-module.exports = { protect, requireRole };
+// Mentorship-based access — only allow users with interestedInMentorship: true
+const requireMentorship = (req, res, next) => {
+  if (!req.user.interestedInMentorship) {
+    return res.status(403).json({
+      message: 'Access denied. Only users opted into mentorship can perform this action.',
+    });
+  }
+  next();
+};
+
+module.exports = { protect, requireRole, requireMentorship };

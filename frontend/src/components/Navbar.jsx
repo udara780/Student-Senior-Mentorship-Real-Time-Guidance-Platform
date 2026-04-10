@@ -3,7 +3,6 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import logoImg from '../assets/hero.png';
 import { AuthContext } from '../context/AuthContext';
 import { LogOut, X, User, ChevronDown, LayoutDashboard, Bell } from 'lucide-react';
-import notiBellImg from '../assets/notification-bell.png';
 
 const styles = `
 .navbar-container {
@@ -451,6 +450,78 @@ const styles = `
   0%, 100% { box-shadow: 0 0 0 2px rgba(15,23,42,0.9), 0 0 0 4px rgba(239,68,68,0); }
   50%       { box-shadow: 0 0 0 2px rgba(15,23,42,0.9), 0 0 0 6px rgba(239,68,68,0.35); }
 }
+
+/* --- Notification Dropdown --- */
+.nav-noti-dropdown {
+  position: absolute;
+  top: calc(100% + 1rem);
+  right: -80px; 
+  width: 340px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 1.2rem;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  max-height: 400px;
+  overflow-y: auto;
+  cursor: default;
+}
+
+@media (max-width: 768px) {
+  .nav-noti-dropdown {
+    right: 0;
+    width: 300px;
+  }
+}
+
+.nav-noti-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.8rem;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  color: inherit;
+  margin-bottom: 0.5rem;
+}
+.nav-noti-item:last-child {
+  margin-bottom: 0;
+}
+.nav-noti-item:hover {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.nav-noti-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: white;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  object-fit: cover;
+}
+
+.nav-noti-text {
+  font-size: 0.85rem;
+  color: #e2e8f0;
+  line-height: 1.4;
+  margin: 0 0 0.3rem 0;
+}
+.nav-noti-time {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+}
 `;
 
 const Navbar = () => {
@@ -458,7 +529,13 @@ const Navbar = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [pendingRequests, setPendingRequests] = useState([]);        // mentorship requests (for mentors)
+  const [groupJoinRequests, setGroupJoinRequests] = useState([]);    // group join requests (for leaders)
+  const [groupResponses, setGroupResponses] = useState([]);          // group request responses (for students)
+  const [inAppNotifications, setInAppNotifications] = useState([]);  // meeting link + general alerts
+  const [showNotiDropdown, setShowNotiDropdown] = useState(false);
   const dropdownRef = useRef(null);
+  const notiRef = useRef(null);
   const navigate = useNavigate();
 
   // AuthContext may be undefined on public pages — safe fallback
@@ -490,36 +567,56 @@ const Navbar = () => {
       : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setShowDropdown(false);
+      }
+      if (notiRef.current && !notiRef.current.contains(e.target)) {
+        setShowNotiDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch pending request count for senior users
+  // Fetch all notifications for any logged-in user (mentorship + group)
   useEffect(() => {
-    if (user?.role !== 'senior') return;
-    const fetchPending = async () => {
+    if (!user) return;
+    const token = sessionStorage.getItem('token');
+    const headers = { Authorization: `Bearer ${token}` };
+
+    const fetchAll = async () => {
       try {
-        const token = sessionStorage.getItem('token');
-        const res = await fetch('/api/requests/incoming', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const pending = data.filter(r => r.status === 'pending').length;
-          setPendingCount(pending);
-        }
+        const results = await Promise.allSettled([
+          // Mentorship incoming (for mentors)
+          (user.role === 'senior' || user.interestedInMentorship)
+            ? fetch('/api/requests/incoming', { headers }).then(r => r.ok ? r.json() : [])
+            : Promise.resolve([]),
+          // Group join incoming (for group leaders)
+          fetch('/api/group-requests/incoming', { headers }).then(r => r.ok ? r.json() : []),
+          // Group request responses (for students)
+          fetch('/api/group-requests/responses', { headers }).then(r => r.ok ? r.json() : []),
+          // In-app notifications (meeting links, etc.) for all users
+          fetch('/api/notifications/my', { headers }).then(r => r.ok ? r.json() : []),
+        ]);
+
+        const mentorPending  = (results[0].value || []).filter(r => r.status === 'pending');
+        const groupIncoming  = results[1].value || [];
+        const groupResp      = results[2].value || [];
+        const inAppNotifs    = results[3].value || [];
+
+        setPendingRequests(mentorPending);
+        setGroupJoinRequests(groupIncoming);
+        setGroupResponses(groupResp);
+        setInAppNotifications(inAppNotifs);
+        setPendingCount(mentorPending.length + groupIncoming.length + groupResp.length + inAppNotifs.length);
       } catch (_) {}
     };
-    fetchPending();
-    // Re-check every 60 seconds
-    const interval = setInterval(fetchPending, 60000);
+
+    fetchAll();
+    const interval = setInterval(fetchAll, 30000);
     return () => clearInterval(interval);
   }, [user]);
 
@@ -542,12 +639,16 @@ const Navbar = () => {
             <NavLink to="/create-group" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={closeMenu}>Create Group</NavLink>
             <NavLink to="/find-group" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={closeMenu}>Find Group</NavLink>
             <NavLink to="/mentors" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'} onClick={closeMenu}>Request Mentor</NavLink>
-            {user?.role === 'senior' && (
-              <NavLink
-                to="/inbox"
-                className={({ isActive }) => isActive ? 'nav-noti-btn active' : 'nav-noti-btn'}
-                onClick={closeMenu}
-                title="Mentorship Inbox"
+            {user && (
+              <div
+                className={`nav-noti-btn ${showNotiDropdown ? 'active' : ''}`}
+                onClick={(e) => {
+                   if (e.target.closest('.nav-noti-dropdown')) return;
+                   setShowNotiDropdown(!showNotiDropdown);
+                }}
+                ref={notiRef}
+                title="Notifications"
+                style={{ cursor: 'pointer', position: 'relative' }}
               >
                 <div className="nav-noti-icon-container">
                   <Bell size={20} strokeWidth={2.5} />
@@ -557,22 +658,156 @@ const Navbar = () => {
                     {pendingCount > 9 ? '9+' : pendingCount}
                   </span>
                 )}
-              </NavLink>
-            )}
-            {user?.role === 'student' && (
-              <div
-                className="nav-noti-btn"
-                onClick={closeMenu}
-                style={{ cursor: 'pointer' }}
-                title="Notifications"
-              >
-                <div className="nav-noti-icon-container">
-                  <img 
-                    src={notiBellImg} 
-                    alt="Notifications" 
-                    style={{ width: '20px', height: '20px', objectFit: 'contain' }} 
-                  />
-                </div>
+                
+                {/* Unified Notification Dropdown */}
+                {showNotiDropdown && (
+                  <div className="nav-noti-dropdown" onClick={(e) => e.stopPropagation()}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.8rem' }}>
+                      <h4 style={{ margin: 0, color: '#f8fafc', fontSize: '1.05rem', fontWeight: 800 }}>Notifications</h4>
+                      {(user?.role === 'senior' || user?.interestedInMentorship) && (
+                        <NavLink
+                           to="/inbox"
+                           onClick={() => { setShowNotiDropdown(false); closeMenu(); }}
+                           style={{ fontSize: '0.8rem', color: '#3b82f6', textDecoration: 'none', fontWeight: 600 }}
+                        >
+                          View Inbox
+                        </NavLink>
+                      )}
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+
+                      {/* ── Mentorship requests (view-only, for mentors) ── */}
+                      {pendingRequests.map(req => (
+                        <div key={`m-${req._id}`} className="nav-noti-item">
+                          {req.student?.profilePhoto
+                            ? <img src={req.student.profilePhoto} className="nav-noti-avatar" alt="Avatar" />
+                            : <div className="nav-noti-avatar">{getInitials(req.student?.name)}</div>
+                          }
+                          <div style={{ flex: 1 }}>
+                            <p className="nav-noti-text">
+                              <strong style={{ color: '#fff' }}>{req.student?.name || 'Unknown'}</strong> has requested mentorship
+                            </p>
+                            <p className="nav-noti-time">{new Date(req.createdAt).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* ── Group join requests (actionable, for leaders) ── */}
+                      {groupJoinRequests.map(req => (
+                        <div 
+                           key={`g-${req._id}`} 
+                           className="nav-noti-item" 
+                           style={{ flexDirection: 'column', gap: '0.6rem', cursor: 'pointer' }}
+                           onClick={() => { navigate(`/student/${req.student._id}`); closeMenu(); setShowNotiDropdown(false); }}
+                           title="Click to view full profile"
+                        >
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.8rem' }}>
+                            {req.student?.profilePhoto
+                              ? <img src={req.student.profilePhoto} className="nav-noti-avatar" alt="Avatar" />
+                              : <div className="nav-noti-avatar">{getInitials(req.student?.name)}</div>
+                            }
+                            <div style={{ flex: 1 }}>
+                              <p className="nav-noti-text">
+                                <strong style={{ color: '#fff' }}>{req.student?.name || 'Unknown'}</strong> requested to join <strong style={{ color: '#a78bfa' }}>{req.group?.moduleName || 'your group'}</strong>
+                              </p>
+                              <p className="nav-noti-time">{new Date(req.createdAt).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem', paddingLeft: '3rem' }}>
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  const token = sessionStorage.getItem('token');
+                                  const res = await fetch(`/api/group-requests/${req._id}/approve`, {
+                                    method: 'PUT',
+                                    headers: { Authorization: `Bearer ${token}` },
+                                  });
+                                  if (res.ok) {
+                                    setGroupJoinRequests(prev => prev.filter(r => r._id !== req._id));
+                                    setPendingCount(c => Math.max(0, c - 1));
+                                  }
+                                } catch (_) {}
+                              }}
+                              style={{ flex: 1, padding: '0.35rem 0.6rem', background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.4)', borderRadius: '8px', color: '#4ade80', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
+                            >
+                              ✓ Accept
+                            </button>
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                try {
+                                  const token = sessionStorage.getItem('token');
+                                  const res = await fetch(`/api/group-requests/${req._id}/reject`, {
+                                    method: 'PUT',
+                                    headers: { Authorization: `Bearer ${token}` },
+                                  });
+                                  if (res.ok) {
+                                    setGroupJoinRequests(prev => prev.filter(r => r._id !== req._id));
+                                    setPendingCount(c => Math.max(0, c - 1));
+                                  }
+                                } catch (_) {}
+                              }}
+                              style={{ flex: 1, padding: '0.35rem 0.6rem', background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: '8px', color: '#f87171', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700 }}
+                            >
+                              ✕ Reject
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* ── Group response notifications (view-only, for students) ── */}
+                      {groupResponses.map(req => (
+                        <div key={`gr-${req._id}`} className="nav-noti-item">
+                          <div className="nav-noti-avatar" style={{ background: req.status === 'approved' ? 'rgba(34,197,94,0.2)' : 'rgba(239,68,68,0.2)' }}>
+                            {req.status === 'approved' ? '✓' : '✕'}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <p className="nav-noti-text">
+                              Your request to join <strong style={{ color: '#a78bfa' }}>{req.group?.moduleName || 'a group'}</strong> was{' '}
+                              <strong style={{ color: req.status === 'approved' ? '#4ade80' : '#f87171' }}>
+                                {req.status === 'approved' ? 'accepted' : 'rejected'}
+                              </strong>
+                            </p>
+                            <p className="nav-noti-time">{new Date(req.updatedAt).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* ── In-app notifications (meeting links) ── */}
+                      {inAppNotifications.map(notif => (
+                        <div key={`n-${notif._id}`} className="nav-noti-item">
+                          <div className="nav-noti-avatar" style={{ background: 'rgba(99,102,241,0.2)', color: '#818cf8', fontSize: '1rem' }}>
+                            🔗
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <p className="nav-noti-text">{notif.message}</p>
+                            {notif.link && (
+                              <a
+                                href={notif.link}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                style={{ fontSize: '0.75rem', color: '#6366f1', textDecoration: 'none', fontWeight: 600 }}
+                              >
+                                Join Meeting →
+                              </a>
+                            )}
+                            <p className="nav-noti-time">{new Date(notif.createdAt).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* ── Empty state ── */}
+                      {pendingRequests.length === 0 && groupJoinRequests.length === 0 && groupResponses.length === 0 && inAppNotifications.length === 0 && (
+                        <div style={{ textAlign: 'center', padding: '1.5rem', color: '#64748b', background: 'rgba(255,255,255,0.02)', borderRadius: '12px' }}>
+                          <p style={{ margin: 0, fontSize: '0.9rem' }}>You have no new notifications.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

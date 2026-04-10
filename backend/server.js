@@ -35,6 +35,8 @@ app.use('/api/sessions', require('./routes/sessionRoutes'));
 app.use('/api/dashboard', require('./routes/dashboardRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/email', require('./routes/emailRoutes'));
+app.use('/api/group-requests', require('./routes/groupRequestRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 
 // Health check
