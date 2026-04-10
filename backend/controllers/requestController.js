@@ -13,10 +13,10 @@ const sendRequest = async (req, res) => {
       return res.status(400).json({ message: 'Senior ID is required' });
     }
 
-    // Verify senior exists
-    const senior = await User.findOne({ _id: seniorId, role: 'senior' });
+    // Verify the target user has opted in for mentorship
+    const senior = await User.findOne({ _id: seniorId, interestedInMentorship: true });
     if (!senior) {
-      return res.status(404).json({ message: 'Verified senior not found' });
+      return res.status(404).json({ message: 'Mentor not found or not available for mentorship' });
     }
 
     // Check if a pending or accepted request already exists

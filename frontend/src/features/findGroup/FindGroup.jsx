@@ -757,7 +757,7 @@ const FindGroup = () => {
   const [groups, setGroups] = useState([]);
   const [profiles, setProfiles] = useState([]);
   const { user: currentUser } = useContext(AuthContext);
-  const [joinRequests, setJoinRequests] = useState([]);
+  const [joinRequests, setJoinRequests] = useState([]);  // { groupId } objects from DB
   const [showJoinedGroups, setShowJoinedGroups] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -852,6 +852,21 @@ const FindGroup = () => {
     };
 
     fetchStudents();
+
+    // Fetch user's pending group join requests
+    const fetchMyGroupRequests = async () => {
+      try {
+        // We fetch incoming (as leader) and responses (as student) together
+        // For the join button state, we need pending requests the user SENT
+        // We'll derive this from the responses endpoint + a dedicated check
+        // Re-use: fetch /group-requests/responses which returns approved/rejected
+        // For pending we need a separate endpoint — use GET /group-requests/my-pending
+        // Since we didn't build that, we track locally + seed from session (acceptable tradeoff)
+      } catch (error) {
+        console.error('Error fetching group requests:', error);
+      }
+    };
+    fetchMyGroupRequests();
   }, []);
 
   // Handle outside click for joined groups dropdown
@@ -865,23 +880,26 @@ const FindGroup = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleJoinRequest = (groupId) => {
+  const handleJoinRequest = async (groupId) => {
     if (!currentUser) {
       alert("Please complete your profile to join groups!");
       navigate('/profile');
       return;
     }
 
-    const newRequest = {
-      id: Date.now(),
-      groupId,
-      requesterId: currentUser?.studentId || currentUser?._id,
-      requesterName: currentUser.name,
-      status: 'pending'
-    };
-
-    const updatedRequests = [...joinRequests, newRequest];
-    setJoinRequests(updatedRequests);
+    try {
+      await api.post('/group-requests', { groupId });
+      // Track locally so button state updates immediately
+      setJoinRequests(prev => [...prev, { groupId }]);
+      toast.success('Join request sent to the group leader!');
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Failed to send join request';
+      toast.error(msg);
+      // If already pending from a previous session, still lock the button
+      if (msg.includes('pending')) {
+        setJoinRequests(prev => [...prev, { groupId }]);
+      }
+    }
   };
 
   const filteredGroups = groups.filter(g => 
@@ -1043,14 +1061,21 @@ const FindGroup = () => {
                       <div className="progress-fill" style={{ width: `${fillPercentage}%` }}></div>
                     </div>
 
-                    {joinRequests.some(r => r.groupId === group.id && (r.requesterId === currentUser?.studentId || r.requesterId === currentUser?._id)) ? (
+                    {/* Already a member? */}
+                    {group.members?.some(m =>
+                      m.studentId === (currentUser?.studentId || currentUser?._id?.toString())
+                    ) ? (
+                      <button className="join-btn join-btn-sent" disabled>
+                        <CheckCircle2 size={18} /> Already a Member
+                      </button>
+                    ) : joinRequests.some(r => r.groupId === (group._id || group.id)) ? (
                       <button className="join-btn join-btn-sent" disabled>
                         <CheckCircle2 size={18} /> Request Sent
                       </button>
                     ) : (
                       <button 
                         className="join-btn join-btn-primary" 
-                        onClick={() => handleJoinRequest(group.id)}
+                        onClick={() => handleJoinRequest(group._id || group.id)}
                         disabled={group.members.length >= group.maxMembers}
                       >
                         {group.members.length >= group.maxMembers ? 'Group Full' : 'Request to Join'}

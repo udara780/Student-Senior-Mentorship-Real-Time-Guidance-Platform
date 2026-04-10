@@ -45,13 +45,13 @@ const bookSession = async (req, res) => {
 // @access  Private
 const getMySessions = async (req, res) => {
   try {
-    const isStudent = req.user.role === 'student';
-
     // Find sessions where user is either the student or the senior
-    const sessions = await Session.find(isStudent ? { student: req.user._id } : { senior: req.user._id })
-      .populate('student', 'name email profilePhoto')
-      .populate('senior', 'name email profilePhoto')
-      .populate('availability', 'date startTime endTime note')
+    const sessions = await Session.find({
+      $or: [{ student: req.user._id }, { senior: req.user._id }]
+    })
+      .populate('student', 'name email profilePhoto studentId')
+      .populate('senior', 'name email profilePhoto studentId')
+      .populate('availability', 'date startTime endTime note assignedStudentId meetingLink')
       .sort({ createdAt: -1 });
 
     res.json(sessions);

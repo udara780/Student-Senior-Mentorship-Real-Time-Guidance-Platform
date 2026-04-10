@@ -28,8 +28,19 @@ const availabilitySchema = new mongoose.Schema(
       default: '',
       maxlength: 200,
     },
+    assignedStudentId: {
+      type: String,
+      required: [true, 'Student IT number is required'],
+      trim: true,
+    },
+    meetingLink: {
+      type: String,
+      default: '',
+      trim: true,
+    },
   },
   { timestamps: true }
 );
 
 module.exports = mongoose.model('Availability', availabilitySchema);
+
