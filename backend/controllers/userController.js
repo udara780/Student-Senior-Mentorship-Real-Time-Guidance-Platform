@@ -5,7 +5,10 @@ const User = require('../models/user');
 // @access  Private
 const getSeniors = async (req, res) => {
   try {
-    const seniors = await User.find({ role: 'senior' }).select('-password');
+    const seniors = await User.find({
+      interestedInMentorship: true,  // Only users who opted in for mentorship
+      _id: { $ne: req.user._id },    // Exclude the logged-in user themselves
+    }).select('-password');
     res.json(seniors);
   } catch (error) {
     console.error('Get seniors error:', error.message);

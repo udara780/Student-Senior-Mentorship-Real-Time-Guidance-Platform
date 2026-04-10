@@ -22,8 +22,11 @@ export default function AvailabilityManager() {
     date: format(new Date(), 'yyyy-MM-dd'),
     startTime: '09:00',
     endTime: '10:00',
-    status: ''
+    status: '',
+    assignedStudentId: '',
   });
+
+  const [sendingLink, setSendingLink] = useState(false);
 
   // Calculate calendar properties
   const startDate = startOfWeek(currentDate, { weekStartsOn: 1 }); // Monday
@@ -50,7 +53,7 @@ export default function AvailabilityManager() {
   const openAddModal = () => {
     setModalMode('add');
     setActiveSlot(null);
-    setFormData({ date: format(new Date(), 'yyyy-MM-dd'), startTime: '09:00', endTime: '10:00', status: '' });
+    setFormData({ date: format(new Date(), 'yyyy-MM-dd'), startTime: '09:00', endTime: '10:00', status: '', assignedStudentId: '' });
     setIsModalOpen(true);
   };
 
@@ -61,7 +64,8 @@ export default function AvailabilityManager() {
       date: slot.date,
       startTime: slot.startTime,
       endTime: slot.endTime,
-      status: slot.isBooked ? 'Booked' : 'Available'
+      status: slot.isBooked ? 'Booked' : 'Available',
+      assignedStudentId: slot.assignedStudentId || '',
     });
     setIsModalOpen(true);
   };
@@ -69,7 +73,10 @@ export default function AvailabilityManager() {
   const handleSave = async (e) => {
     e.preventDefault();
     if (!formData.status) {
-      return toast.error("Please choose a Status (Available or Booked)");
+      return toast.error('Please choose a Status (Available or Booked)');
+    }
+    if (!formData.assignedStudentId.trim()) {
+      return toast.error('Student IT number is required');
     }
 
     setLoading(true);
@@ -79,14 +86,16 @@ export default function AvailabilityManager() {
           date: formData.date,
           startTime: formData.startTime,
           endTime: formData.endTime,
-          isBooked: formData.status === 'Booked'
+          isBooked: formData.status === 'Booked',
+          assignedStudentId: formData.assignedStudentId.trim(),
         });
       } else {
         await api.post('/availability', {
           date: formData.date,
           startTime: formData.startTime,
           endTime: formData.endTime,
-          isBooked: formData.status === 'Booked'
+          isBooked: formData.status === 'Booked',
+          assignedStudentId: formData.assignedStudentId.trim(),
         });
       }
 
@@ -95,9 +104,22 @@ export default function AvailabilityManager() {
       fetchSlots();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to save slot');
-      fetchSlots(); // Recover visual state if partial failure
+      fetchSlots();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSendLink = async () => {
+    if (!activeSlot) return;
+    setSendingLink(true);
+    try {
+      await api.post(`/availability/${activeSlot._id}/send-link`);
+      toast.success('Meeting link sent via notification and email! 🎉');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to send meeting link');
+    } finally {
+      setSendingLink(false);
     }
   };
 
@@ -217,6 +239,12 @@ export default function AvailabilityManager() {
                           <div className="font-bold tracking-tight">{format(parseISO(slot.date), 'EEE d')}</div>
                           <div className="font-medium opacity-90">{formatTimeRender(slot.startTime)} - {formatTimeRender(slot.endTime)}</div>
                           <div className="mt-1 font-semibold opacity-90">{slot.isBooked ? 'Booked' : 'Available'}</div>
+                          {slot.assignedStudentId && (
+                            <div className="mt-0.5 opacity-80 truncate">👤 {slot.assignedStudentId}</div>
+                          )}
+                          {slot.meetingLink && (
+                            <div className="mt-0.5 opacity-70 text-[10px] truncate">🔗 Link ready</div>
+                          )}
 
                           {/* Hover Actions Preview */}
                           <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 group-hover/slot:opacity-100 transition-opacity bg-white/80 p-0.5 rounded backdrop-blur shadow-sm">
@@ -265,6 +293,16 @@ export default function AvailabilityManager() {
                   />
                 </div>
 
+                <Input
+                  label="Student IT Number *"
+                  type="text"
+                  name="assignedStudentId"
+                  placeholder="e.g. IT23888888"
+                  value={formData.assignedStudentId}
+                  onChange={(e) => setFormData({ ...formData, assignedStudentId: e.target.value })}
+                  required
+                />
+
                 <div className="flex flex-col gap-1.5">
                   <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Status</label>
                   <select
@@ -278,10 +316,35 @@ export default function AvailabilityManager() {
                   </select>
                 </div>
 
-                <div className="mt-8 flex gap-3 justify-end border-t border-slate-100 dark:border-slate-700 pt-5">
+                {/* Show auto-generated meeting link in edit mode */}
+                {modalMode === 'edit' && activeSlot?.meetingLink && (
+                  <div className="mt-1 p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-200 dark:border-indigo-800">
+                    <p className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 mb-1">🔗 Auto-Generated Meeting Link</p>
+                    <a
+                      href={activeSlot.meetingLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-indigo-500 dark:text-indigo-300 break-all hover:underline"
+                    >
+                      {activeSlot.meetingLink}
+                    </a>
+                  </div>
+                )}
+
+                <div className="mt-8 flex gap-3 justify-end border-t border-slate-100 dark:border-slate-700 pt-5 flex-wrap">
                   {modalMode === 'edit' && (
                     <Button type="button" variant="danger" onClick={handleDelete} className="mr-auto px-4 !py-2 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 border-none shadow-none">
                       <Trash2 size={16} className="inline mr-1" /> Delete
+                    </Button>
+                  )}
+                  {modalMode === 'edit' && activeSlot?.meetingLink && (
+                    <Button
+                      type="button"
+                      onClick={handleSendLink}
+                      disabled={sendingLink}
+                      className="px-4 !py-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 border-none shadow-none font-semibold text-sm"
+                    >
+                      {sendingLink ? 'Sending...' : '📨 Send Link'}
                     </Button>
                   )}
                   <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="px-5 py-2 font-semibold dark:text-slate-300 dark:hover:bg-slate-700">
