@@ -8,6 +8,7 @@ import {
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
+import ChatbotToggle from '../../components/ChatbotToggle';
 const styles = `
 :root {
   --primary: #3b82f6;
@@ -840,6 +841,7 @@ const Profile = () => {
 
         </div>
       </div>
+      <ChatbotToggle />
     </>
   );
 };

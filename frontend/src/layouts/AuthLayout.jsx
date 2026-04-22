@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import campusImg from '../assets/campus.png';
+import lgImg from '../assets/lgImg.jpg';
 
 export const AuthLayout = () => {
   return (
@@ -8,7 +8,7 @@ export const AuthLayout = () => {
       {/* Immersive Campus Background */}
       <div 
         className="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-1000 scale-105"
-        style={{ backgroundImage: `url(${campusImg})` }}
+        style={{ backgroundImage: `url(${lgImg})` }}
       />
       
       {/* Sophisticated Overlays */}

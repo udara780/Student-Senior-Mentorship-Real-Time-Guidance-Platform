@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthContext } from './context/AuthContext';
 import { MainLayout } from './layouts/MainLayout';
 import { AuthLayout } from './layouts/AuthLayout';
+import { LoginLayout } from './layouts/LoginLayout';
 
 import LandingPage from './features/landing/LandingPage';
 import Login from './features/auth/Login';
@@ -73,8 +74,10 @@ function App() {
         <Route path="/" element={<LandingPage />} />
 
         {/* Auth Routes */}
-        <Route element={<AuthLayout />}>
+        <Route element={<LoginLayout />}>
           <Route path="/login" element={<Login />} />
+        </Route>
+        <Route element={<AuthLayout />}>
           <Route path="/register" element={<Register />} />
         </Route>
 
