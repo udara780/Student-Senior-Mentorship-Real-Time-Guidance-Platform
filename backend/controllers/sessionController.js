@@ -86,7 +86,18 @@ const updateSessionStatus = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to update this session' });
     }
 
-    session.status = status;
+    if (status === 'completed') {
+      if (!session.joinedBy.includes(req.user._id)) {
+        session.joinedBy.push(req.user._id);
+      }
+      // If both users have joined, mark global status as completed
+      if (session.joinedBy.length >= 2) {
+        session.status = 'completed';
+      }
+    } else {
+      session.status = status;
+    }
+    
     await session.save();
 
     // If cancelled, free up the availability slot
