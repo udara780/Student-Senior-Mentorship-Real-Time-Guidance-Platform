@@ -672,7 +672,25 @@ const Profile = () => {
               <div className="mentorship-toggle">
                 <div className="toggle-info" style={{ textAlign: 'left' }}>
                   <h4>Mentorship</h4>
-                  <p>{formData.interestedInMentorship ? 'Open to mentor' : 'Not interested'}</p>
+                  {/* Status-aware label */}
+                  {user?.mentorStatus === 'pending' && (
+                    <p style={{ color: '#f59e0b', fontWeight: 600, fontSize: '0.8rem', margin: '2px 0 0' }}>
+                      ⏳ Request Pending — awaiting admin review
+                    </p>
+                  )}
+                  {user?.mentorStatus === 'approved' && (
+                    <p style={{ color: '#10b981', fontWeight: 700, fontSize: '0.8rem', margin: '2px 0 0' }}>
+                      ✅ Verified Mentor
+                    </p>
+                  )}
+                  {user?.mentorStatus === 'rejected' && (
+                    <p style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.8rem', margin: '2px 0 0' }}>
+                      ❌ Rejected — toggle to re-apply
+                    </p>
+                  )}
+                  {(!user?.mentorStatus || user?.mentorStatus === 'none') && (
+                    <p>{formData.interestedInMentorship ? 'Open to mentor' : 'Not interested'}</p>
+                  )}
                 </div>
                 <label className="switch">
                   <input
@@ -680,6 +698,7 @@ const Profile = () => {
                     name="interestedInMentorship"
                     checked={formData.interestedInMentorship}
                     onChange={handleChange}
+                    disabled={user?.mentorStatus === 'pending' || user?.mentorStatus === 'approved'}
                   />
                   <span className="slider"></span>
                 </label>

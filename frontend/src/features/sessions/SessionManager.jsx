@@ -349,7 +349,7 @@ export default function SessionManager() {
               className="shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2 group"
               disabled={isSendingEmail}
               onClick={async () => {
-                const meetingUrl = sessionToJoin?.availability?.meetingLink || sessionToJoin?.meetingLink || 'https://meet.jit.si/';
+                const meetingUrl = sessionToJoin?.availability?.meetingLink || sessionToJoin?.meetingLink || 'https://teams.microsoft.com/';
                 // 1. Open meeting immediately
                 window.open(meetingUrl, '_blank');
                 // 2. Close modal
