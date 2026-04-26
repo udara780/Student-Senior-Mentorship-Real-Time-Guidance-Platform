@@ -14,6 +14,14 @@ const styles = `
   padding: 4rem 2rem;
 }
 
+.page-title-gradient {
+  background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+
 .search-header {
   display: flex;
   justify-content: space-between;
@@ -50,20 +58,22 @@ const styles = `
 
 .search-input {
   width: 100%;
-  background: rgba(30, 41, 59, 0.5);
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
-  padding: 1.2rem 1.2rem 1.2rem 3.5rem; /* Reverted right padding since icon is external */
-  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 1.2rem 1.2rem 1.2rem 3.5rem;
+  border-radius: 20px;
   color: white;
   font-size: 1.1rem;
-  transition: all 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .search-input:focus {
   border-color: #3b82f6;
-  background: rgba(30, 41, 59, 0.8);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2), 0 10px 30px rgba(59, 130, 246, 0.15);
   outline: none;
+  transform: translateY(-2px);
 }
 
 .my-groups-icon-btn {
@@ -157,8 +167,8 @@ const styles = `
 }
 
 .nav-arrow {
-  background: rgba(30, 41, 59, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: white;
   min-width: 50px;
   width: 50px;
@@ -171,14 +181,14 @@ const styles = `
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 10;
   backdrop-filter: blur(12px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
 .nav-arrow:hover {
-  background: #3b82f6;
-  border-color: #60a5fa;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-color: #a855f7;
   transform: scale(1.15);
-  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 12px 25px rgba(139, 92, 246, 0.4);
 }
 
 .slider-viewport {
@@ -213,29 +223,30 @@ const styles = `
 }
 
 .group-card {
-  background: rgba(30, 41, 59, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 24px;
   padding: 2.2rem;
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
   position: relative;
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
   flex-direction: column;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
 }
 
 .group-card:hover {
-  transform: translateY(-8px);
-  border-color: #3b82f6;
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+  transform: translateY(-10px);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 30px 60px -12px rgba(139, 92, 246, 0.25), 0 18px 36px -18px rgba(0,0,0,0.5);
 }
 
 .group-card::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0; height: 4px;
-  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  top: 0; left: 0; right: 0; height: 5px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
 }
 
 .group-header {
@@ -354,17 +365,19 @@ const styles = `
   display: flex;
   align-items: center;
   gap: 1rem;
-  background: rgba(15, 23, 42, 0.4);
+  background: rgba(30, 41, 59, 0.4);
   padding: 0.7rem 1rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.3s ease;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .mini-profile-card:hover {
-  background: rgba(15, 23, 42, 0.6);
-  border-color: rgba(59, 130, 246, 0.3);
-  transform: translateX(4px);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(15, 23, 42, 0.6));
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateX(6px) translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
   cursor: pointer;
 }
 
@@ -475,14 +488,16 @@ const styles = `
 }
 
 .join-btn-primary {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
   color: white;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.3);
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
 .join-btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 12px 24px rgba(139, 92, 246, 0.5);
+  background: linear-gradient(135deg, #4f46e5, #a855f7);
 }
 
 .join-btn-sent {
@@ -499,7 +514,7 @@ const styles = `
 .invite-btn {
   width: 100%;
   padding: 0.85rem;
-  border-radius: 12px;
+  border-radius: 16px;
   font-weight: 600;
   margin-top: 1.5rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -508,19 +523,20 @@ const styles = `
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  background: rgba(59, 130, 246, 0.08);
-  color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+  color: #60a5fa;
+  border: 1px solid rgba(96, 165, 250, 0.4);
   font-family: inherit;
   font-size: 0.95rem;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.1);
 }
 
 .invite-btn:hover:not(:disabled) {
-  background: #3b82f6;
+  background: linear-gradient(135deg, #3b82f6, #a855f7);
   color: white;
-  border-color: #3b82f6;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+  border-color: transparent;
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(139, 92, 246, 0.4);
 }
 
 .invite-btn:active {
@@ -586,28 +602,52 @@ const styles = `
   font-size: 1.2rem;
   font-weight: 700;
   color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pm-header-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 220px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(59, 130, 246, 0.2));
+  z-index: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pm-header-bg::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0; height: 100px;
+  background: linear-gradient(to top, #0f172a, transparent);
 }
 
 .profile-modal-content {
-  padding: 2rem 1.5rem;
+  padding: 0 1.5rem 2rem 1.5rem;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
 .pm-avatar-container {
+  margin-top: 60px;
   display: flex;
   justify-content: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .pm-avatar {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #a855f7);
+  background: linear-gradient(135deg, #10b981, #3b82f6);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 4px solid rgba(255,255,255,0.1);
+  border: 4px solid #0f172a;
   box-shadow: 0 10px 25px rgba(0,0,0,0.4);
 }
 
@@ -640,11 +680,17 @@ const styles = `
 }
 
 .pm-section {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.pm-section:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .pm-section-title {
@@ -705,6 +751,209 @@ const styles = `
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Group Modal Styling */
+.gm-panel {
+  width: 100%;
+  max-width: 480px;
+  background: #0f172a;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: -10px 0 50px rgba(0,0,0,0.6);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow-y: auto;
+  position: relative;
+}
+
+.gm-header-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 220px;
+  background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(139,92,246,0.25));
+  z-index: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gm-header-bg::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0; height: 100px;
+  background: linear-gradient(to top, #0f172a, transparent);
+}
+
+.gm-top-bar {
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.gm-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.gm-content {
+  padding: 0 1.5rem 2rem 1.5rem;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.gm-avatar-wrapper {
+  margin-top: 60px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.gm-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #3b82f6, #a855f7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 4px solid #0f172a;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: white;
+}
+
+.gm-module-name {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+}
+
+.gm-module-code {
+  text-align: center;
+  color: #60a5fa;
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 0 0 2rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.gm-project-topic {
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+  border: 1px solid rgba(192, 132, 252, 0.3);
+  padding: 1.2rem;
+  border-radius: 16px;
+  color: #f1f5f9;
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.gm-project-topic:hover {
+  transform: translateY(-2px);
+  border-color: rgba(192, 132, 252, 0.6);
+  box-shadow: 0 8px 25px rgba(192, 132, 252, 0.15);
+}
+
+.gm-topic-icon {
+  background: rgba(192, 132, 252, 0.2);
+  color: #c084fc;
+  padding: 0.7rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gm-section {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.gm-section:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.gm-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding-bottom: 0.8rem;
+}
+
+.gm-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.gm-section-badge {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.gm-success-box {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.2));
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 1.2rem;
+  border-radius: 16px;
+  text-align: center;
+  color: #34d399;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1);
 }
 `;
 
@@ -947,8 +1196,8 @@ const FindGroup = () => {
 
         <header className="search-header">
           <div>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Find a Group</h1>
-            <p style={{ color: '#94a3b8' }}>Join existing teams looking for members</p>
+            <h1 className="page-title-gradient" style={{ fontSize: '2.8rem', fontWeight: 800, marginBottom: '0.5rem', marginTop: 0 }}>Find a Group</h1>
+            <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>Join existing teams looking for members</p>
           </div>
           <div className="search-actions-wrapper" ref={dropdownRef}>
             <div className="search-bar">
@@ -1116,8 +1365,8 @@ const FindGroup = () => {
         {/* Find Members Section */}
         <header className="search-header" style={{ marginTop: '5rem', marginBottom: '2rem' }}>
           <div>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Find Members</h1>
-            <p style={{ color: '#94a3b8' }}>Connect with available students to form a team</p>
+            <h1 className="page-title-gradient" style={{ fontSize: '2.8rem', fontWeight: 800, marginBottom: '0.5rem', marginTop: 0 }}>Find Members</h1>
+            <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>Connect with available students to form a team</p>
           </div>
         </header>
 
@@ -1183,13 +1432,16 @@ const FindGroup = () => {
         {showProfileModal && (
           <div className="profile-modal-overlay" onClick={() => setShowProfileModal(false)}>
             <div className="profile-modal-panel" onClick={(e) => e.stopPropagation()}>
-              <div className="profile-modal-header">
+              <div className="pm-header-bg"></div>
+              <div className="profile-modal-header" style={{ background: 'rgba(15, 23, 42, 0.6)' }}>
                 <h3 className="profile-modal-title">Student Profile</h3>
                 <button 
                   onClick={() => setShowProfileModal(false)}
-                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex' }}
+                  style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', padding: '0.4rem', borderRadius: '50%', transition: 'background 0.2s' }}
+                  onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                  onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                 >
-                  <X size={24} />
+                  <X size={20} />
                 </button>
               </div>
 
@@ -1265,39 +1517,51 @@ const FindGroup = () => {
         {/* Group Details Modal Overlay */}
         {showGroupModal && selectedGroup && (
           <div className="profile-modal-overlay" onClick={() => setShowGroupModal(false)} style={{ zIndex: 9998 }}>
-            <div className="profile-modal-panel" onClick={(e) => e.stopPropagation()}>
-              <div className="profile-modal-header">
-                <h3 className="profile-modal-title">Group Details</h3>
+            <div className="gm-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="gm-header-bg"></div>
+              
+              <div className="gm-top-bar">
+                <h3 className="gm-title">Group Details</h3>
                 <button 
                   onClick={() => setShowGroupModal(false)}
-                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex' }}
+                  style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', padding: '0.4rem', borderRadius: '50%', transition: 'background 0.2s' }}
+                  onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                  onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                 >
-                  <X size={24} />
+                  <X size={20} />
                 </button>
               </div>
 
-              <div className="profile-modal-content">
-                <div className="pm-avatar-container">
-                  <div className="pm-avatar" style={{ borderRadius: '24px' }}>
-                     <span className="pm-initials">{selectedGroup.moduleName.substring(0, 2).toUpperCase()}</span>
+              <div className="gm-content">
+                <div className="gm-avatar-wrapper">
+                  <div className="gm-avatar">
+                     {selectedGroup.moduleName.substring(0, 2).toUpperCase()}
                   </div>
                 </div>
                 
-                <h2 className="pm-name">{selectedGroup.moduleName}</h2>
-                <div className="pm-id" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                <h2 className="gm-module-name">{selectedGroup.moduleName}</h2>
+                <div className="gm-module-code">
                   <Code size={16} /> {selectedGroup.moduleCode}
                 </div>
 
                 {selectedGroup.projectTitle && (
-                  <div className="project-topic" style={{ justifyContent: 'center', marginBottom: '2rem' }}>
-                    <Star size={16} color="#c084fc" />
-                    <span>{selectedGroup.projectTitle}</span>
+                  <div className="gm-project-topic">
+                    <div className="gm-topic-icon">
+                      <Star size={24} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.3rem', fontWeight: 700 }}>Project Focus</div>
+                      <div style={{ lineHeight: '1.4' }}>{selectedGroup.projectTitle}</div>
+                    </div>
                   </div>
                 )}
 
-                <div className="pm-section">
-                  <h4 className="pm-section-title"><Users size={18} /> Team Roster ({selectedGroup.members?.length || 0}/{selectedGroup.maxMembers})</h4>
-                  <div className="members-list" style={{ marginTop: '1rem' }}>
+                <div className="gm-section">
+                  <div className="gm-section-header">
+                    <h4 className="gm-section-title"><Users size={20} color="#3b82f6" /> Team Roster</h4>
+                    <span className="gm-section-badge">{selectedGroup.members?.length || 0} / {selectedGroup.maxMembers} Members</span>
+                  </div>
+                  <div className="members-list" style={{ marginTop: '0.5rem' }}>
                     {selectedGroup.members && selectedGroup.members.map((member, idx) => (
                       <MiniProfileCard 
                         key={member.studentId || idx}
@@ -1312,8 +1576,8 @@ const FindGroup = () => {
                 </div>
                 
                 {selectedGroup.members?.some(m => m.studentId === (currentUser?.studentId || currentUser?._id?.toString())) && (
-                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '1rem', borderRadius: '12px', textAlign: 'center', color: '#34d399', fontSize: '0.9rem', fontWeight: 600, marginTop: '1rem' }}>
-                    <CheckCircle2 size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '0.4rem' }} />
+                  <div className="gm-success-box">
+                    <CheckCircle2 size={24} />
                     You are a member of this group
                   </div>
                 )}
