@@ -30,8 +30,8 @@ const createSlot = async (req, res) => {
       return res.status(400).json({ message: 'You already have a slot at this date and time' });
     }
 
-    // Auto-generate a unique Jitsi Meet link
-    const meetingLink = `https://meet.jit.si/mentorship-${uuidv4()}`;
+    // Auto-generate a unique Microsoft Teams link (placeholder format)
+    const meetingLink = `https://teams.microsoft.com/l/meetup-join/mentorship-${uuidv4()}`;
 
     const slot = await Availability.create({
       senior: req.user._id,
@@ -46,7 +46,7 @@ const createSlot = async (req, res) => {
 
     // Auto-create a Session for the assigned student if they exist in the system
     let autoSession = null;
-    const assignedStudent = await User.findOne({ studentId: assignedStudentId.trim() });
+    const assignedStudent = await User.findOne({ studentId: new RegExp(`^${assignedStudentId.trim()}$`, 'i') });
     if (assignedStudent) {
       autoSession = await Session.create({
         student: assignedStudent._id,
@@ -170,8 +170,8 @@ const sendMeetingLinkToStudent = async (req, res) => {
       return res.status(400).json({ message: 'No meeting link found on this slot' });
     }
 
-    // Find the student by their IT number
-    const student = await User.findOne({ studentId: slot.assignedStudentId });
+    // Find the student by their IT number (case-insensitive)
+    const student = await User.findOne({ studentId: new RegExp(`^${slot.assignedStudentId.trim()}$`, 'i') });
     if (!student) {
       return res.status(404).json({ message: `No user found with IT number: ${slot.assignedStudentId}` });
     }

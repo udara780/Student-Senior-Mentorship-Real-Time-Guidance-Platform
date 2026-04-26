@@ -5,6 +5,7 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Users, Calendar, MessageSquare, Video, Clock, CheckCircle, Star, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ChatbotToggle from '../../components/ChatbotToggle';
 
 export default function Dashboard() {
   const { user } = useContext(AuthContext);
@@ -172,6 +173,7 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
+      <ChatbotToggle />
     </div>
   );
 }

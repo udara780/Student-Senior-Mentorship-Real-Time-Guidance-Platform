@@ -1,6 +1,7 @@
 const User = require('../models/user');
 const Request = require('../models/Request');
 const Session = require('../models/Session');
+const Notification = require('../models/Notification');
 
 // @route   GET /api/admin/stats
 // @desc    Get platform-wide statistics
@@ -67,6 +68,14 @@ const approveMentorRequest = async (req, res) => {
     user.isVerified = true;
     await user.save();
 
+    // Send in-app notification to the approved user
+    await Notification.create({
+      recipient: user._id,
+      type: 'mentor_approved',
+      message: '🎉 Congratulations! Your mentor application has been approved. You are now a verified mentor on the platform.',
+      link: '/profile',
+    });
+
     res.json({ message: `${user.name} has been approved as a mentor`, user });
   } catch (error) {
     console.error('Approve mentor error:', error.message);
@@ -90,7 +99,16 @@ const rejectMentorRequest = async (req, res) => {
     }
 
     user.mentorStatus = 'rejected';
+    user.interestedInMentorship = false;
     await user.save();
+
+    // Send in-app notification to the rejected user
+    await Notification.create({
+      recipient: user._id,
+      type: 'mentor_rejected',
+      message: 'Your mentor application was not approved at this time. You may update your profile and re-apply.',
+      link: '/profile',
+    });
 
     res.json({ message: `${user.name}'s mentor request has been rejected`, user });
   } catch (error) {

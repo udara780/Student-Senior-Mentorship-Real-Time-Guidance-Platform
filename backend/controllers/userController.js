@@ -64,7 +64,17 @@ const updateUserProfile = async (req, res) => {
     if (academicYear !== undefined) user.academicYear = academicYear === '' ? undefined : academicYear;
     if (semester !== undefined) user.semester = semester === '' ? undefined : semester;
     if (gpa !== undefined) user.gpa = gpa === '' ? undefined : Number(gpa);
-    if (interestedInMentorship !== undefined) user.interestedInMentorship = interestedInMentorship;
+    if (interestedInMentorship !== undefined) {
+      user.interestedInMentorship = interestedInMentorship;
+      // When toggling ON: set pending (unless already approved)
+      if (interestedInMentorship === true && user.mentorStatus !== 'approved') {
+        user.mentorStatus = 'pending';
+      }
+      // When toggling OFF: reset (unless already approved)
+      if (interestedInMentorship === false && user.mentorStatus !== 'approved') {
+        user.mentorStatus = 'none';
+      }
+    }
 
     const updated = await user.save();
 
@@ -81,6 +91,9 @@ const updateUserProfile = async (req, res) => {
         semester: updated.semester,
         gpa: updated.gpa,
         interestedInMentorship: updated.interestedInMentorship,
+        mentorStatus: updated.mentorStatus,
+        isVerified: updated.isVerified,
+        profilePhoto: updated.profilePhoto,
       },
     });
   } catch (error) {

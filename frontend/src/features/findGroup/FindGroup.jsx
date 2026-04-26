@@ -5,6 +5,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { AuthContext } from '../../context/AuthContext';
 import ygroupsImg from '../../assets/ygroups.png';
+import ChatbotToggle from '../../components/ChatbotToggle';
 
 const styles = `
 .find-group-container {
@@ -1249,6 +1250,7 @@ const FindGroup = () => {
           </div>
         )}
       </div>
+      <ChatbotToggle />
     </>
   );
 };

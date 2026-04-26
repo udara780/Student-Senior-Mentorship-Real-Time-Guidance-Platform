@@ -64,6 +64,12 @@ export default function SessionManager() {
        return isSameDay(parseISO(session.availability.date), day);
     });
   };
+
+  const getSessionStatusForUser = (session) => {
+    if (session.status === 'completed' || session.status === 'cancelled') return session.status;
+    if (session.joinedBy && session.joinedBy.includes(user?._id)) return 'completed';
+    return session.status;
+  };
   // ── Send meeting link email to student (non-blocking) ────────────────────
   const sendMeetingEmailToStudent = async (session, teamsUrl) => {
     if (!session?.student?.email) {
@@ -95,7 +101,8 @@ export default function SessionManager() {
   const filterSessions = (data) => {
     return data
       .filter(s => {
-        const matchesStatus = s.status === filterStatus;
+        const userStatus = getSessionStatusForUser(s);
+        const matchesStatus = userStatus === filterStatus;
         const matchesSearch = searchQuery === '' || 
           s.topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
           s.senior?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -181,11 +188,14 @@ export default function SessionManager() {
                       
                       {/* Session Indicators rendering */}
                       <div className="mt-2 space-y-1">
-                        {daySessions.map(ds => (
-                          <div key={ds._id} className="flex items-center text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">
-                            {getStatusDot(ds.status)} {ds.status.charAt(0).toUpperCase() + ds.status.slice(1)}
-                          </div>
-                        ))}
+                        {daySessions.map(ds => {
+                          const status = getSessionStatusForUser(ds);
+                          return (
+                            <div key={ds._id} className="flex items-center text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">
+                              {getStatusDot(status)} {status.charAt(0).toUpperCase() + status.slice(1)}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   );
@@ -338,14 +348,24 @@ export default function SessionManager() {
               variant="primary"
               className="shadow-lg shadow-primary-500/20 flex items-center justify-center gap-2 group"
               disabled={isSendingEmail}
-              onClick={() => {
-                const meetingUrl = sessionToJoin?.availability?.meetingLink || sessionToJoin?.meetingLink || 'https://meet.jit.si/';
+              onClick={async () => {
+                const meetingUrl = sessionToJoin?.availability?.meetingLink || sessionToJoin?.meetingLink || 'https://teams.microsoft.com/';
                 // 1. Open meeting immediately
                 window.open(meetingUrl, '_blank');
                 // 2. Close modal
                 setIsMeetingModalOpen(false);
                 // 3. Send email to student asynchronously (non-blocking)
                 sendMeetingEmailToStudent(sessionToJoin, meetingUrl);
+                
+                // 4. Mark session as completed
+                try {
+                  await api.put(`/sessions/${sessionToJoin._id}`, { status: 'completed' });
+                  toast.success('Session marked as completed.');
+                  fetchSessions();
+                } catch (error) {
+                  console.error('Failed to update session status', error);
+                  toast.error('Failed to mark session as completed.');
+                }
               }}
             >
               <ExternalLink size={18} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />

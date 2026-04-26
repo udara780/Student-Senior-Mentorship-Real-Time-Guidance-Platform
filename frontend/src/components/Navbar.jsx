@@ -783,7 +783,7 @@ const Navbar = () => {
                           </div>
                           <div style={{ flex: 1 }}>
                             <p className="nav-noti-text">{notif.message}</p>
-                            {notif.link && (
+                            {notif.link && notif.type === 'meeting_link' && (
                               <a
                                 href={notif.link}
                                 target="_blank"

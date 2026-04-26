@@ -9,7 +9,7 @@ const notificationSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['meeting_link', 'general'],
+      enum: ['meeting_link', 'general', 'mentor_approved', 'mentor_rejected'],
       default: 'general',
     },
     message: {

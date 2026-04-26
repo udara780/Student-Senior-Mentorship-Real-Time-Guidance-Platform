@@ -7,6 +7,7 @@ import findGroupImg from '../../assets/front-view-male-student-red-checkered-shi
 import mentorImg from '../../assets/diverse-colleague-men-shaking-hands-together.jpg';
 import Footer from '../../components/Footer';
 import Navbar from '../../components/Navbar';
+import ChatbotToggle from '../../components/ChatbotToggle';
 
 const styles = `
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
@@ -403,6 +404,7 @@ const Home = () => {
 
                 </div>
             </div>
+            <ChatbotToggle />
             <Footer />
         </>
     );

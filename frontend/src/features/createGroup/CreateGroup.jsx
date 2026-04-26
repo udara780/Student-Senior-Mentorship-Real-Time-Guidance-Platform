@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, BookOpen, Code, Plus, Trash2, User, Search, CheckCircle2, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
+import ChatbotToggle from '../../components/ChatbotToggle';
 
 const styles = `
 .create-group-container {
@@ -388,6 +389,7 @@ const CreateGroup = () => {
           </form>
         </div>
       </div>
+      <ChatbotToggle />
     </>
   );
 };

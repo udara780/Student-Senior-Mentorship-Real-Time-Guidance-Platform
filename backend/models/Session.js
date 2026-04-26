@@ -26,6 +26,10 @@ const sessionSchema = new mongoose.Schema(
       type: String, // Optional, if they want to use Google Meet/Zoom instead of in-app chat
       default: '',
     },
+    joinedBy: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    }],
   },
   { timestamps: true }
 );
