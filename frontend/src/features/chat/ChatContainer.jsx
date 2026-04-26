@@ -3,10 +3,440 @@ import toast from 'react-hot-toast';
 import { io } from 'socket.io-client';
 import api from '../../services/api';
 import { AuthContext } from '../../context/AuthContext';
-import { Card } from '../../components/Card';
-import { Button } from '../../components/Button';
-import { Send, User, MessageSquare } from 'lucide-react';
+import { Send, User, MessageSquare, Search, X as XIcon } from 'lucide-react';
 import { format } from 'date-fns';
+
+const styles = `
+.chat-page {
+  height: calc(100vh - 90px);
+  padding: 1.5rem;
+  font-family: 'Poppins', sans-serif;
+  color: #f1f5f9;
+  display: flex;
+  gap: 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.chat-glass {
+  background: rgba(15,23,42,0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+/* Sidebar */
+.chat-sidebar {
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.chat-sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.chat-sidebar-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chat-search-icon {
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 8px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.chat-search-icon:hover {
+  color: #93c5fd;
+  background: rgba(59,130,246,0.1);
+}
+
+.chat-search-input-wrap {
+  margin-top: 0.75rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.chat-search-field {
+  width: 100%;
+  background: rgba(15,23,42,0.8);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 0.55rem 2.2rem 0.55rem 0.9rem;
+  font-size: 0.85rem;
+  color: #f1f5f9;
+  font-family: 'Poppins', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.chat-search-field::placeholder { color: #475569; }
+.chat-search-field:focus { border-color: rgba(59,130,246,0.5); }
+
+.chat-search-clear {
+  position: absolute;
+  right: 0.6rem;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.chat-search-clear:hover { color: #f87171; }
+
+.chat-unread-badge {
+  background: rgba(59,130,246,0.2);
+  border: 1px solid rgba(59,130,246,0.4);
+  color: #60a5fa;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.6rem;
+  border-radius: 12px;
+}
+
+.chat-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chat-list::-webkit-scrollbar { width: 6px; }
+.chat-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+.chat-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.chat-item:hover {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.05);
+}
+
+.chat-item.active {
+  background: rgba(59,130,246,0.1);
+  border-color: rgba(59,130,246,0.2);
+}
+
+.chat-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(59,130,246,0.15);
+  border: 1px solid rgba(59,130,246,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #60a5fa;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.chat-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chat-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-item-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-item-msg {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.chat-item-msg.unread {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.chat-item-unread-dot {
+  width: 22px;
+  height: 22px;
+  background: #3b82f6;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 0 10px rgba(59,130,246,0.5);
+}
+
+/* Main Area */
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-main-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: rgba(255,255,255,0.01);
+}
+
+.chat-header-info h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.chat-header-status {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #10b981;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.chat-header-status-dot {
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: rgba(0,0,0,0.1);
+}
+
+.chat-messages::-webkit-scrollbar { width: 6px; }
+.chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+.message-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  max-width: 80%;
+}
+
+.message-row.mine {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.message-row.theirs {
+  align-self: flex-start;
+}
+
+.message-bubble {
+  padding: 0.75rem 1.25rem;
+  border-radius: 20px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.message-row.mine .message-bubble {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.message-row.theirs .message-bubble {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.05);
+  color: #e2e8f0;
+  border-bottom-left-radius: 4px;
+}
+
+.message-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.message-row.mine .message-meta {
+  align-items: flex-end;
+}
+
+.message-row.theirs .message-meta {
+  align-items: flex-start;
+}
+
+.message-sender {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.3rem;
+  padding: 0 0.2rem;
+}
+
+.message-time {
+  font-size: 0.7rem;
+  color: #64748b;
+  margin-top: 0.3rem;
+  padding: 0 0.2rem;
+}
+
+/* Input Area */
+.chat-input-area {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.01);
+}
+
+.chat-input-form {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.chat-input-wrapper {
+  flex: 1;
+  background: rgba(15,23,42,0.8);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.chat-input-wrapper:focus-within {
+  border-color: rgba(59,130,246,0.5);
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.1);
+}
+
+.chat-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #f1f5f9;
+  font-size: 0.95rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+.chat-input::placeholder {
+  color: #475569;
+}
+
+.chat-send-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.chat-send-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(59,130,246,0.4);
+}
+
+.chat-send-btn:disabled {
+  background: rgba(255,255,255,0.05);
+  color: #475569;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.chat-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  text-align: center;
+  padding: 2rem;
+}
+
+.chat-empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(59,130,246,0.05);
+  border: 1px solid rgba(59,130,246,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  color: #3b82f6;
+  box-shadow: inset 0 0 20px rgba(59,130,246,0.1);
+}
+
+.chat-empty-state h3 {
+  color: #e2e8f0;
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+}
+
+.chat-empty-state p {
+  margin: 0;
+  font-size: 0.9rem;
+  max-width: 250px;
+}
+`;
 
 export default function ChatContainer() {
   const { user } = useContext(AuthContext);
@@ -15,9 +445,11 @@ export default function ChatContainer() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [socket, setSocket] = useState(null);
-  const [unreadCounts, setUnreadCounts] = useState({}); // { [chatId]: number }
+  const [unreadCounts, setUnreadCounts] = useState({});
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef(null);
-  const activeChatRef = useRef(null); // Ref so socket handler always has latest value
+  const activeChatRef = useRef(null);
 
   useEffect(() => {
     const newSocket = io(window.location.origin, {
@@ -42,11 +474,9 @@ export default function ChatContainer() {
         const currentChatId = activeChatRef.current?._id?.toString();
 
         if (incomingChatId === currentChatId) {
-          // Active chat — show immediately
           setMessages((prev) => [...prev, message]);
           scrollToBottom();
         } else {
-          // Different chat — increment unread dot
           setUnreadCounts((prev) => ({
             ...prev,
             [incomingChatId]: (prev[incomingChatId] || 0) + 1,
@@ -93,22 +523,20 @@ export default function ChatContainer() {
     }, 100);
   };
 
-  // Set active chat and clear its unread count
   const openChat = (chat) => {
     setActiveChat(chat);
     activeChatRef.current = chat;
-    // Clear unread count for this chat
     setUnreadCounts((prev) => ({ ...prev, [chat._id]: 0 }));
+    // Mark all incoming messages in this chat as read on the backend
+    api.put(`/chats/${chat._id}/read`).catch(() => {});
   };
 
-  // Determine the "other person" in the conversation (not the logged-in user)
   const getOtherPerson = (chat) => {
     if (!chat) return null;
     const iAmStudent = user._id === chat.student?._id;
     return iAmStudent ? chat.senior : chat.student;
   };
 
-  // Check if a message was sent by the current user
   const isMyMessage = (msg) => {
     const senderId = msg.sender?._id || msg.sender;
     return senderId?.toString() === user._id?.toString();
@@ -118,195 +546,208 @@ export default function ChatContainer() {
   const totalUnread = Object.values(unreadCounts).reduce((sum, n) => sum + n, 0);
 
   return (
-    <div className="h-[calc(100vh-140px)] flex gap-6 animate-fade-in relative z-10">
-
-      {/* Sidebar — Conversation List */}
-      <Card className="w-1/3 flex flex-col p-4 shadow-xl border-white/50 dark:border-slate-700/50 h-full overflow-hidden">
-        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-5 px-2 font-heading flex items-center gap-2">
-          Conversations
-          {totalUnread > 0 && (
-            <span className="ml-auto flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-[10px] font-bold">
-              {totalUnread > 9 ? '9+' : totalUnread}
-            </span>
-          )}
-        </h2>
-
-        <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-          {chats.length === 0 ? (
-            <div className="text-center mt-16 px-4">
-              <MessageSquare size={36} className="mx-auto mb-3 text-slate-300 dark:text-slate-600" />
-              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">No conversations yet.</p>
-              <p className="text-slate-400 dark:text-slate-500 text-xs mt-1">Chats are created when a mentor request is accepted.</p>
-            </div>
-          ) : (
-            chats.map(chat => {
-              const other = getOtherPerson(chat);
-              const isActive = activeChat?._id === chat._id;
-              return (
-                <div
-                  key={chat._id}
-                  onClick={() => openChat(chat)}
-                  className={`p-3.5 rounded-xl cursor-pointer border transition-all duration-200 ${
-                    isActive
-                      ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800 shadow-sm'
-                      : 'bg-white dark:bg-slate-800 border-transparent hover:bg-slate-50 dark:hover:bg-slate-700/50 hover:border-slate-200 dark:hover:border-slate-600'
-                  }`}
+    <>
+      <style>{styles}</style>
+      <div className="chat-page">
+        
+        {/* Sidebar */}
+        <div className="chat-sidebar chat-glass">
+          <div className="chat-sidebar-header">
+            <h2>
+              Conversations
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                {totalUnread > 0 && (
+                  <span className="chat-unread-badge">
+                    {totalUnread > 9 ? '9+' : totalUnread} new
+                  </span>
+                )}
+                <span
+                  className="chat-search-icon"
+                  onClick={() => { setShowSearch(s => !s); setSearchQuery(''); }}
+                  title="Search conversations"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0 overflow-hidden border border-primary-200 dark:border-primary-800">
-                        {other?.profilePhoto
-                          ? <img src={other.profilePhoto} alt={other?.name} className="w-full h-full object-cover" />
-                          : <User size={20} className="text-primary-500 dark:text-primary-400" />
-                        }
-                      </div>
-                      {/* Unread blue dot indicator */}
-                      {unreadCounts[chat._id] > 0 && (
-                        <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] rounded-full bg-blue-500 border-2 border-white dark:border-slate-800 text-white text-[9px] font-bold px-0.5 shadow-sm">
-                          {unreadCounts[chat._id] > 9 ? '9+' : unreadCounts[chat._id]}
-                        </span>
+                  <Search size={17} />
+                </span>
+              </div>
+            </h2>
+            {showSearch && (
+              <div className="chat-search-input-wrap">
+                <input
+                  className="chat-search-field"
+                  placeholder="Search by name…"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  autoFocus
+                />
+                {searchQuery && (
+                  <span className="chat-search-clear" onClick={() => setSearchQuery('')}>
+                    <XIcon size={14} />
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="chat-list">
+            {chats.length === 0 ? (
+              <div className="chat-empty-state" style={{ padding: '3rem 1rem' }}>
+                <MessageSquare size={36} color="#475569" style={{ marginBottom: '1rem' }} />
+                <h3 style={{ fontSize: '1rem', color: '#94a3b8', margin: '0 0 0.5rem' }}>No conversations yet</h3>
+                <p style={{ fontSize: '0.8rem', margin: 0 }}>Chats are created when a mentorship request is accepted.</p>
+              </div>
+            ) : (
+              chats
+                .filter(chat => {
+                  if (!searchQuery.trim()) return true;
+                  const other = getOtherPerson(chat);
+                  return other?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+                })
+                .map(chat => {
+                const other = getOtherPerson(chat);
+                const isActive = activeChat?._id === chat._id;
+                const unread = unreadCounts[chat._id] || 0;
+                
+                return (
+                  <div
+                    key={chat._id}
+                    onClick={() => openChat(chat)}
+                    className={`chat-item ${isActive ? 'active' : ''}`}
+                  >
+                    <div className="chat-avatar">
+                      {other?.profilePhoto ? (
+                        <img src={other.profilePhoto} alt={other?.name} />
+                      ) : (
+                        <User size={20} />
                       )}
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className={`font-semibold text-[15px] truncate ${
-                        unreadCounts[chat._id] > 0
-                          ? 'text-slate-900 dark:text-white'
-                          : 'text-slate-800 dark:text-slate-100'
-                      }`}>
-                        {other?.name || 'Unknown'}
-                      </p>
-                      <p className={`text-xs font-medium ${
-                        unreadCounts[chat._id] > 0
-                          ? 'text-blue-500 dark:text-blue-400 font-semibold'
-                          : 'text-slate-500 dark:text-slate-400'
-                      }`}>
-                        {unreadCounts[chat._id] > 0
-                          ? `${unreadCounts[chat._id]} new message${unreadCounts[chat._id] > 1 ? 's' : ''}`
-                          : 'Mentorship chat'
-                        }
+                    
+                    <div className="chat-item-info">
+                      <p className="chat-item-name">{other?.name || 'Unknown User'}</p>
+                      <p className={`chat-item-msg ${unread > 0 ? 'unread' : ''}`}>
+                        {unread > 0 
+                          ? `${unread} new message${unread > 1 ? 's' : ''}` 
+                          : 'Mentorship chat'}
                       </p>
                     </div>
+
+                    {unread > 0 && (
+                      <div className="chat-item-unread-dot">
+                        {unread > 9 ? '9+' : unread}
+                      </div>
+                    )}
                   </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* Main Chat Area */}
+        <div className="chat-main chat-glass">
+          {activeChat ? (
+            <>
+              {/* Header */}
+              <div className="chat-main-header">
+                <div className="chat-avatar" style={{ width: '40px', height: '40px' }}>
+                  {otherPerson?.profilePhoto ? (
+                    <img src={otherPerson.profilePhoto} alt={otherPerson?.name} />
+                  ) : (
+                    <User size={18} />
+                  )}
                 </div>
-              );
-            })
+                <div className="chat-header-info">
+                  <h3>{otherPerson?.name || 'Unknown User'}</h3>
+                  <p className="chat-header-status">
+                    <span className="chat-header-status-dot"></span>
+                    Active Now
+                  </p>
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div className="chat-messages">
+                {messages.length === 0 ? (
+                  <div className="chat-empty-state">
+                    <p style={{ fontWeight: 600 }}>No messages yet.</p>
+                    <p style={{ fontSize: '0.85rem' }}>Send a message to start the conversation! 👋</p>
+                  </div>
+                ) : (
+                  messages.map((msg, idx) => {
+                    const mine = isMyMessage(msg);
+                    const senderName = msg.sender?.name || (mine ? user.name : otherPerson?.name || 'Unknown');
+                    const senderPhoto = msg.sender?.profilePhoto;
+
+                    const prevMine = idx > 0 ? isMyMessage(messages[idx - 1]) : null;
+                    const showName = prevMine === null || prevMine !== mine;
+
+                    return (
+                      <div key={msg._id || idx} className={`message-row ${mine ? 'mine' : 'theirs'}`}>
+                        
+                        {!mine && (
+                          <div className="chat-avatar" style={{ width: '32px', height: '32px', marginBottom: '1.2rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                            {senderPhoto ? (
+                              <img src={senderPhoto} alt={senderName} />
+                            ) : (
+                              <User size={14} color="#94a3b8" />
+                            )}
+                          </div>
+                        )}
+
+                        <div className="message-meta">
+                          {showName && (
+                            <span className="message-sender">
+                              {mine ? 'You' : senderName}
+                            </span>
+                          )}
+                          <div className="message-bubble">
+                            {msg.content}
+                          </div>
+                          <span className="message-time">
+                            {msg.createdAt ? format(new Date(msg.createdAt), 'h:mm a') : ''}
+                          </span>
+                        </div>
+
+                        {mine && <div style={{ width: '32px', flexShrink: 0 }} />}
+                      </div>
+                    );
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input */}
+              <div className="chat-input-area">
+                <form onSubmit={handleSendMessage} className="chat-input-form">
+                  <div className="chat-input-wrapper">
+                    <input
+                      className="chat-input"
+                      placeholder="Type your message here..."
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage(e)}
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    className="chat-send-btn"
+                    disabled={!newMessage.trim()}
+                  >
+                    <Send size={18} />
+                  </button>
+                </form>
+              </div>
+            </>
+          ) : (
+            <div className="chat-empty-state">
+              <div className="chat-empty-icon">
+                <MessageSquare size={36} />
+              </div>
+              <h3>Your Messages</h3>
+              <p>Select a conversation from the sidebar to view your chat or start a new message.</p>
+            </div>
           )}
         </div>
-      </Card>
-
-      {/* Main Chat Area */}
-      <Card className="w-2/3 flex flex-col shadow-xl border-white/50 dark:border-slate-700/50 p-0 overflow-hidden h-full">
-        {activeChat ? (
-          <>
-            {/* Chat Header */}
-            <div className="p-4 border-b border-slate-100 dark:border-slate-700/60 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md shadow-sm z-10 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center overflow-hidden border border-primary-200 dark:border-primary-800 flex-shrink-0">
-                {otherPerson?.profilePhoto
-                  ? <img src={otherPerson.profilePhoto} alt={otherPerson?.name} className="w-full h-full object-cover" />
-                  : <User size={20} className="text-primary-500 dark:text-primary-400" />
-                }
-              </div>
-              <div>
-                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 leading-tight font-heading">
-                  {otherPerson?.name || 'Unknown'}
-                </h3>
-                <p className="text-xs text-emerald-500 font-semibold flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
-                  Active
-                </p>
-              </div>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50/50 dark:bg-slate-900/30">
-              {messages.length === 0 ? (
-                <div className="text-center mt-20 text-slate-400 dark:text-slate-500">
-                  <p className="font-medium text-sm">No messages yet. Say hello! 👋</p>
-                </div>
-              ) : (
-                messages.map((msg, idx) => {
-                  const mine = isMyMessage(msg);
-                  const senderName = msg.sender?.name || (mine ? user.name : otherPerson?.name || 'Unknown');
-                  const senderPhoto = msg.sender?.profilePhoto;
-
-                  // Group consecutive messages from same sender
-                  const prevMine = idx > 0 ? isMyMessage(messages[idx - 1]) : null;
-                  const showName = prevMine === null || prevMine !== mine;
-
-                  return (
-                    <div key={msg._id || idx} className={`flex ${mine ? 'justify-end' : 'justify-start'} items-end gap-2`}>
-                      {/* Avatar for other person */}
-                      {!mine && (
-                        <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0 overflow-hidden border border-primary-100 dark:border-primary-900 self-end mb-0.5">
-                          {senderPhoto
-                            ? <img src={senderPhoto} alt={senderName} className="w-full h-full object-cover" />
-                            : <User size={14} className="text-primary-400" />
-                          }
-                        </div>
-                      )}
-
-                      <div className={`flex flex-col ${mine ? 'items-end' : 'items-start'} max-w-[72%]`}>
-                        {showName && (
-                          <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mb-1 px-1">
-                            {mine ? 'You' : senderName}
-                          </span>
-                        )}
-                        <div className={`px-4 py-2.5 rounded-2xl text-[15px] leading-relaxed shadow-sm ${
-                          mine
-                            ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white rounded-br-sm shadow-primary-500/25'
-                            : 'bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-sm'
-                        }`}>
-                          {msg.content}
-                        </div>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 px-1">
-                          {msg.createdAt ? format(new Date(msg.createdAt), 'h:mm a') : ''}
-                        </span>
-                      </div>
-
-                      {/* Spacer for my messages (no avatar) */}
-                      {mine && <div className="w-8 flex-shrink-0" />}
-                    </div>
-                  );
-                })
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Message Input */}
-            <div className="p-4 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border-t border-slate-100 dark:border-slate-700/60">
-              <form onSubmit={handleSendMessage} className="flex gap-3 items-center">
-                <div className="flex-1 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-primary-300 dark:focus-within:ring-primary-700 focus-within:border-primary-400 transition-all flex items-center">
-                  <input
-                    placeholder="Type your message…"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage(e)}
-                    className="w-full bg-transparent border-none focus:outline-none focus:ring-0 text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 text-sm"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className="px-5 shadow-lg shadow-primary-500/30 rounded-xl flex-shrink-0"
-                  disabled={!newMessage.trim()}
-                >
-                  <Send size={18} />
-                </Button>
-              </form>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-4">
-            <div className="w-20 h-20 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-              <MessageSquare size={32} className="text-slate-300 dark:text-slate-600" />
-            </div>
-            <div className="text-center">
-              <p className="font-semibold text-lg text-slate-500 dark:text-slate-400">Select a conversation</p>
-              <p className="text-sm mt-1">Choose a chat from the sidebar to start messaging.</p>
-            </div>
-          </div>
-        )}
-      </Card>
-    </div>
+      </div>
+    </>
   );
 }

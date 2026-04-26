@@ -52,7 +52,63 @@ const getChatMessages = async (req, res) => {
   }
 };
 
+// @route   GET /api/chats/unread-count
+// @desc    Get total unread message count for the logged-in user
+// @access  Private
+const getUnreadCount = async (req, res) => {
+  try {
+    const chats = await Chat.find({
+      $or: [{ student: req.user._id }, { senior: req.user._id }],
+    }).select('_id');
+
+    const chatIds = chats.map(c => c._id);
+
+    const count = await Message.countDocuments({
+      chat: { $in: chatIds },
+      sender: { $ne: req.user._id },
+      isRead: false,
+    });
+
+    res.json({ unreadCount: count });
+  } catch (error) {
+    console.error('Get unread count error:', error.message);
+    res.status(500).json({ message: 'Server error fetching unread count' });
+  }
+};
+
+// @route   PUT /api/chats/:chatId/read
+// @desc    Mark all messages in a chat as read for the current user
+// @access  Private
+const markChatAsRead = async (req, res) => {
+  try {
+    const { chatId } = req.params;
+
+    const chat = await Chat.findById(chatId);
+    if (!chat) return res.status(404).json({ message: 'Chat not found' });
+
+    if (
+      chat.student.toString() !== req.user._id.toString() &&
+      chat.senior.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({ message: 'Not authorized' });
+    }
+
+    // Mark all messages NOT sent by the current user as read
+    await Message.updateMany(
+      { chat: chatId, sender: { $ne: req.user._id }, isRead: false },
+      { $set: { isRead: true } }
+    );
+
+    res.json({ message: 'Chat marked as read' });
+  } catch (error) {
+    console.error('Mark read error:', error.message);
+    res.status(500).json({ message: 'Server error marking chat as read' });
+  }
+};
+
 module.exports = {
   getMyChats,
   getChatMessages,
+  getUnreadCount,
+  markChatAsRead,
 };
