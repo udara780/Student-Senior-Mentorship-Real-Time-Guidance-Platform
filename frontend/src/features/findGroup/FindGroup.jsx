@@ -766,6 +766,9 @@ const FindGroup = () => {
   const [isProfileLoading, setIsProfileLoading] = useState(false);
   const [fetchedProfile, setFetchedProfile] = useState(null);
 
+  const [showGroupModal, setShowGroupModal] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState(null);
+
   const handleProfileClick = async (studentId) => {
     // Match by human-readable studentId OR by MongoDB _id (fallback when studentId is unset)
     const prof = profiles.find(
@@ -975,7 +978,16 @@ const FindGroup = () => {
                 
                 {joinedGroups.length > 0 ? (
                   joinedGroups.map(group => (
-                    <div key={group.id} className="joined-group-item">
+                    <div 
+                      key={group.id} 
+                      className="joined-group-item"
+                      onClick={() => {
+                        setSelectedGroup(group);
+                        setShowGroupModal(true);
+                        setShowJoinedGroups(false);
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <div className="joined-group-avatar">
                         {group.moduleName.substring(0, 2).toUpperCase()}
                       </div>
@@ -1246,6 +1258,66 @@ const FindGroup = () => {
                   Failed to load profile details.
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Group Details Modal Overlay */}
+        {showGroupModal && selectedGroup && (
+          <div className="profile-modal-overlay" onClick={() => setShowGroupModal(false)} style={{ zIndex: 9998 }}>
+            <div className="profile-modal-panel" onClick={(e) => e.stopPropagation()}>
+              <div className="profile-modal-header">
+                <h3 className="profile-modal-title">Group Details</h3>
+                <button 
+                  onClick={() => setShowGroupModal(false)}
+                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', display: 'flex' }}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="profile-modal-content">
+                <div className="pm-avatar-container">
+                  <div className="pm-avatar" style={{ borderRadius: '24px' }}>
+                     <span className="pm-initials">{selectedGroup.moduleName.substring(0, 2).toUpperCase()}</span>
+                  </div>
+                </div>
+                
+                <h2 className="pm-name">{selectedGroup.moduleName}</h2>
+                <div className="pm-id" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                  <Code size={16} /> {selectedGroup.moduleCode}
+                </div>
+
+                {selectedGroup.projectTitle && (
+                  <div className="project-topic" style={{ justifyContent: 'center', marginBottom: '2rem' }}>
+                    <Star size={16} color="#c084fc" />
+                    <span>{selectedGroup.projectTitle}</span>
+                  </div>
+                )}
+
+                <div className="pm-section">
+                  <h4 className="pm-section-title"><Users size={18} /> Team Roster ({selectedGroup.members?.length || 0}/{selectedGroup.maxMembers})</h4>
+                  <div className="members-list" style={{ marginTop: '1rem' }}>
+                    {selectedGroup.members && selectedGroup.members.map((member, idx) => (
+                      <MiniProfileCard 
+                        key={member.studentId || idx}
+                        studentId={member.studentId}
+                        fallbackName={member.name}
+                        isLeader={member.studentId === selectedGroup.leaderId}
+                        profiles={profiles}
+                        onClick={handleProfileClick}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                {selectedGroup.members?.some(m => m.studentId === (currentUser?.studentId || currentUser?._id?.toString())) && (
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '1rem', borderRadius: '12px', textAlign: 'center', color: '#34d399', fontSize: '0.9rem', fontWeight: 600, marginTop: '1rem' }}>
+                    <CheckCircle2 size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '0.4rem' }} />
+                    You are a member of this group
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
