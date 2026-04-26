@@ -610,8 +610,12 @@ const Navbar = () => {
         setPendingRequests(mentorPending);
         setGroupJoinRequests(groupIncoming);
         setGroupResponses(groupResp);
-        setInAppNotifications(inAppNotifs);
-        setPendingCount(mentorPending.length + groupIncoming.length + groupResp.length + inAppNotifs.length);
+        // Frontend safeguard: always sort newest → oldest before rendering
+        const sortedNotifs = [...inAppNotifs].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setInAppNotifications(sortedNotifs);
+        setPendingCount(mentorPending.length + groupIncoming.length + groupResp.length + sortedNotifs.length);
       } catch (_) {}
     };
 
