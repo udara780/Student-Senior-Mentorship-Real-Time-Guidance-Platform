@@ -1086,20 +1086,31 @@ const FindGroup = () => {
     
     fetchGroups();
     
-    // Fetch students from the database
+    // Fetch ALL users (students + seniors/mentors) so both are clickable in group cards
+    // and visible in the "Find Members" section
     const fetchStudents = async () => {
       try {
-        const response = await api.get('/users/students');
-        const dbStudents = response.data.map(u => ({
+        const [studentsRes, seniorsRes] = await Promise.all([
+          api.get('/users/students'),
+          api.get('/users/seniors'),
+        ]);
+
+        const mapUser = (u) => ({
           ...u,
-          // Map MongoDB _id to studentId to keep compatibility with existing components
+          // Keep existing studentId if set, fall back to _id so seniors are matchable
           studentId: u.studentId || u._id,
-          // Fallback if not specifically present
-          academicYear: u.bio?.includes('Year') ? u.bio.split(' ')[0] + ' ' + u.bio.split(' ')[1] : 'Year Not Specified'
-        }));
-        setProfiles(dbStudents);
+          academicYear: u.bio?.includes('Year')
+            ? u.bio.split(' ')[0] + ' ' + u.bio.split(' ')[1]
+            : 'Year Not Specified',
+        });
+
+        const allUsers = [
+          ...studentsRes.data.map(mapUser),
+          ...seniorsRes.data.map(mapUser),
+        ];
+        setProfiles(allUsers);
       } catch (error) {
-        console.error('Error fetching students:', error);
+        console.error('Error fetching users:', error);
         setProfiles([]);
       }
     };
