@@ -7,6 +7,8 @@ const getSeniors = async (req, res) => {
   try {
     const seniors = await User.find({
       interestedInMentorship: true,  // Only users who opted in for mentorship
+      isVerified: true,              // Only admin-verified mentors
+      mentorStatus: 'approved',      // Only approved applications
       _id: { $ne: req.user._id },    // Exclude the logged-in user themselves
     }).select('-password');
     res.json(seniors);

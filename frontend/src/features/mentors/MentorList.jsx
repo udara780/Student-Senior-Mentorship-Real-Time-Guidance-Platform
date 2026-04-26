@@ -329,6 +329,7 @@ export default function MentorList() {
   const hasFilters = query.trim() || domain;
 
   const filtered = mentors.filter(m => {
+    if (!m.isVerified) return false;          // Frontend safeguard: verified only
     const q = query.toLowerCase().trim();
     const nameMatch = m.name?.toLowerCase().includes(q);
     const skillMatch = Array.isArray(m.skills) && m.skills.some(s => s.toLowerCase().includes(q));

@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../services/api';
+import { io } from 'socket.io-client';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Users, Calendar, MessageSquare, Video, Clock, CheckCircle, Star, ArrowRight } from 'lucide-react';
@@ -16,6 +17,7 @@ export default function Dashboard() {
     totalGuidance: '0h'
   });
   const [loading, setLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -29,6 +31,21 @@ export default function Dashboard() {
       }
     };
     fetchStats();
+    // Fetch real unread message count
+    api.get('/chats/unread-count')
+      .then(({ data }) => setUnreadCount(data.unreadCount || 0))
+      .catch(() => {});
+
+    // Real-time: listen for new unread messages via Socket.IO
+    const token = sessionStorage.getItem('token');
+    const socket = io(window.location.origin, {
+      path: '/socket.io',
+      auth: { token },
+    });
+    socket.on('newUnreadMessage', () => {
+      setUnreadCount(prev => prev + 1);
+    });
+    return () => socket.close();
   }, []);
 
   return (
@@ -142,6 +159,19 @@ export default function Dashboard() {
 
           {/* Message Center */}
           <Card className="group flex flex-col items-start hover:-translate-y-1.5 h-full relative overflow-hidden">
+            {/* Unread badge */}
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute', top: '1rem', right: '1rem',
+                background: '#ef4444', color: '#fff',
+                borderRadius: '999px', minWidth: '22px', height: '22px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '0.7rem', fontWeight: 700, padding: '0 6px',
+                boxShadow: '0 2px 8px rgba(239,68,68,0.5)', zIndex: 10,
+              }}>
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
             <div className="w-14 h-14 bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500">
               <MessageSquare size={28} />
             </div>

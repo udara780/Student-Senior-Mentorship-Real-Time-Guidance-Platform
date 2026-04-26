@@ -34,7 +34,10 @@ module.exports = (io) => {
         socket.join(chat._id.toString());
       });
 
-      console.log(`📋 User ${socket.user.id} auto-joined ${userChats.length} chat room(s)`);
+      // Also join a personal room for direct targeting (e.g. unread notifications)
+      socket.join(`user:${socket.user.id}`);
+
+      console.log(`📋 User ${socket.user.id} auto-joined ${userChats.length} chat room(s) + personal room`);
     } catch (err) {
       console.error('Auto-join chats error:', err.message);
     }
@@ -80,6 +83,17 @@ module.exports = (io) => {
 
         // Broadcast the populated message to everyone in the room
         io.to(chatId).emit('receiveMessage', populated);
+
+        // Notify the RECIPIENT via their personal room so Dashboard badge updates
+        const chatDoc = await Chat.findById(chatId).select('student senior');
+        if (chatDoc) {
+          const recipientId =
+            chatDoc.student.toString() === socket.user.id
+              ? chatDoc.senior.toString()
+              : chatDoc.student.toString();
+          io.to(`user:${recipientId}`).emit('newUnreadMessage', { chatId });
+        }
+
         console.log(`📨 Message sent in Chat ${chatId} by User ${socket.user.id}`);
       } catch (error) {
         console.error('Socket send message error:', error);
