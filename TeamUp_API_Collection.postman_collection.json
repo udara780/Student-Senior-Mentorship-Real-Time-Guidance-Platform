@@ -1,0 +1,521 @@
+{
+  "info": {
+    "name": "TeamUp – Student-Senior Platform API",
+    "_postman_id": "teamup-api-collection-v1",
+    "description": "Full API collection covering authRoutes, groupRequestRoutes, groupRoutes, notificationRoutes, requestRoutes, and userRoutes.\n\n**Setup:**\n1. Create an Environment with variable `BASE_URL` = `http://localhost:5000/api`\n2. Run **Auth → Register** or **Auth → Login** first.\n3. Copy the returned `token` and add it as environment variable `TOKEN`.\n4. All protected requests automatically use `Bearer {{TOKEN}}`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "BASE_URL", "value": "http://localhost:5000/api", "type": "string" },
+    { "key": "TOKEN",    "value": "",                            "type": "string" },
+    { "key": "USER_ID",  "value": "",                            "type": "string" },
+    { "key": "GROUP_ID", "value": "",                            "type": "string" },
+    { "key": "GROUP_REQUEST_ID", "value": "",                   "type": "string" },
+    { "key": "REQUEST_ID",       "value": "",                   "type": "string" },
+    { "key": "NOTIFICATION_ID",  "value": "",                   "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "01 – Auth",
+      "description": "Endpoints from authRoutes.js  →  /api/auth",
+      "item": [
+        {
+          "name": "Register (with profile photo)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name",        "value": "Test Student",  "type": "text" },
+                { "key": "email",       "value": "test@student.com","type": "text" },
+                { "key": "password",    "value": "password123",   "type": "text" },
+                { "key": "role",        "value": "student",       "type": "text",
+                  "description": "student | senior" },
+                { "key": "studentId",   "value": "S12345",        "type": "text" },
+                { "key": "profilePhoto","src":   "",              "type": "file",
+                  "description": "Optional – select a local image file" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/register",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "POST /api/auth/register\nCreates a new user. Accepts multipart/form-data so a profile photo can be uploaded. On success returns the user object + JWT token.\n\n✏️  After running, copy the token value into the TOKEN collection variable."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.token) {",
+                  "  pm.collectionVariables.set('TOKEN', json.token);",
+                  "  console.log('TOKEN saved automatically:', json.token);",
+                  "}",
+                  "if (json._id) pm.collectionVariables.set('USER_ID', json._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@student.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "POST /api/auth/login\nReturns JWT token on successful authentication.\n\n✏️  Token is saved automatically by the test script below."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.token) {",
+                  "  pm.collectionVariables.set('TOKEN', json.token);",
+                  "  console.log('TOKEN saved automatically:', json.token);",
+                  "}",
+                  "if (json._id) pm.collectionVariables.set('USER_ID', json._id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "02 – Users",
+      "description": "Endpoints from userRoutes.js  →  /api/users",
+      "item": [
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/users/profile",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", "profile"]
+            },
+            "description": "GET /api/users/profile (protected)\nReturns the full profile of the currently authenticated user."
+          }
+        },
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"bio\": \"Year 2 Semester 1\",\n  \"skills\": [\"React\", \"Node.js\"],\n  \"academicYear\": \"Year 2\",\n  \"semester\": \"Semester 1\",\n  \"gpa\": 3.8,\n  \"interestedInMentorship\": false\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/users/profile",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", "profile"]
+            },
+            "description": "PUT /api/users/profile (protected)\nUpdates text-based profile fields for the authenticated user."
+          }
+        },
+        {
+          "name": "Update Profile Photo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "profilePhoto", "src": "", "type": "file",
+                  "description": "Select an image file from your machine" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/users/profile/photo",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", "profile", "photo"]
+            },
+            "description": "PUT /api/users/profile/photo (protected)\nUploads a new profile photo using multipart/form-data."
+          }
+        },
+        {
+          "name": "Get All Seniors",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/users/seniors",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", "seniors"]
+            },
+            "description": "GET /api/users/seniors (protected)\nReturns a list of all users with role = 'senior'."
+          }
+        },
+        {
+          "name": "Get All Students",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/users/students",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", "students"]
+            },
+            "description": "GET /api/users/students (protected)\nReturns a list of all users with role = 'student'."
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/users/{{USER_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["users", "{{USER_ID}}"]
+            },
+            "description": "GET /api/users/:id (protected)\nReturns the public profile of any user by their MongoDB _id.\n\n✏️  Set the USER_ID collection variable to the target user's _id."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "03 – Groups",
+      "description": "Endpoints from groupRoutes.js  →  /api/groups",
+      "item": [
+        {
+          "name": "Create Group",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"moduleName\": \"Software Engineering\",\n  \"moduleCode\": \"CS3001\",\n  \"projectTitle\": \"AI-Powered Platform\",\n  \"maxMembers\": 5,\n  \"members\": [\n    { \"studentId\": \"{{USER_ID}}\", \"name\": \"Test Student\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/groups",
+              "host": ["{{BASE_URL}}"],
+              "path": ["groups"]
+            },
+            "description": "POST /api/groups (protected)\nCreates a new project group. The authenticated user becomes the leader.\n\n✏️  After running, copy the returned _id into the GROUP_ID variable."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json._id) {",
+                  "  pm.collectionVariables.set('GROUP_ID', json._id);",
+                  "  console.log('GROUP_ID saved:', json._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Groups",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/groups",
+              "host": ["{{BASE_URL}}"],
+              "path": ["groups"]
+            },
+            "description": "GET /api/groups (protected)\nReturns all groups in the database."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "04 – Group Requests",
+      "description": "Endpoints from groupRequestRoutes.js  →  /api/group-requests",
+      "item": [
+        {
+          "name": "Send Join Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"groupId\": \"{{GROUP_ID}}\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/group-requests",
+              "host": ["{{BASE_URL}}"],
+              "path": ["group-requests"]
+            },
+            "description": "POST /api/group-requests (protected)\nSends a join request for the specified group.\n\n✏️  Make sure GROUP_ID is set first (run Create Group or Get All Groups)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json._id) {",
+                  "  pm.collectionVariables.set('GROUP_REQUEST_ID', json._id);",
+                  "  console.log('GROUP_REQUEST_ID saved:', json._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Incoming Group Requests (Leader)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/group-requests/incoming",
+              "host": ["{{BASE_URL}}"],
+              "path": ["group-requests", "incoming"]
+            },
+            "description": "GET /api/group-requests/incoming (protected)\nLeader fetches all pending join requests for their groups."
+          }
+        },
+        {
+          "name": "Get My Request Responses (Student)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/group-requests/responses",
+              "host": ["{{BASE_URL}}"],
+              "path": ["group-requests", "responses"]
+            },
+            "description": "GET /api/group-requests/responses (protected)\nStudent fetches the resolved (approved/rejected) responses to their sent requests."
+          }
+        },
+        {
+          "name": "Approve Group Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/group-requests/{{GROUP_REQUEST_ID}}/approve",
+              "host": ["{{BASE_URL}}"],
+              "path": ["group-requests", "{{GROUP_REQUEST_ID}}", "approve"]
+            },
+            "description": "PUT /api/group-requests/:id/approve (protected – leader only)\nApproves a pending join request and adds the requester to the group.\n\n✏️  Set GROUP_REQUEST_ID to the _id of the pending request."
+          }
+        },
+        {
+          "name": "Reject Group Request",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/group-requests/{{GROUP_REQUEST_ID}}/reject",
+              "host": ["{{BASE_URL}}"],
+              "path": ["group-requests", "{{GROUP_REQUEST_ID}}", "reject"]
+            },
+            "description": "PUT /api/group-requests/:id/reject (protected – leader only)\nRejects a pending join request.\n\n✏️  Set GROUP_REQUEST_ID to the _id of the pending request."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "05 – Mentorship Requests",
+      "description": "Endpoints from requestRoutes.js  →  /api/requests\n\nNote:  POST requires role = 'student'.  GET /incoming and PUT require the target user to have interestedInMentorship = true.",
+      "item": [
+        {
+          "name": "Send Mentorship Request (Student Only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"seniorId\": \"{{USER_ID}}\",\n  \"message\": \"Hi, I would like to connect for mentorship guidance.\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/requests",
+              "host": ["{{BASE_URL}}"],
+              "path": ["requests"]
+            },
+            "description": "POST /api/requests (protected – student role required)\nStudent sends a mentorship request to a senior.\n\n✏️  Set USER_ID to the senior's _id before running."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json._id) {",
+                  "  pm.collectionVariables.set('REQUEST_ID', json._id);",
+                  "  console.log('REQUEST_ID saved:', json._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get My Sent Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/requests/my",
+              "host": ["{{BASE_URL}}"],
+              "path": ["requests", "my"]
+            },
+            "description": "GET /api/requests/my (protected)\nReturns all mentorship requests sent by the authenticated user."
+          }
+        },
+        {
+          "name": "Get Incoming Requests (Mentor Only)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/requests/incoming",
+              "host": ["{{BASE_URL}}"],
+              "path": ["requests", "incoming"]
+            },
+            "description": "GET /api/requests/incoming (protected – interestedInMentorship must be true)\nReturns incoming mentorship requests received by the authenticated senior/mentor."
+          }
+        },
+        {
+          "name": "Accept / Reject a Request (Mentor Only)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" },
+              { "key": "Content-Type",  "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/requests/{{REQUEST_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["requests", "{{REQUEST_ID}}"]
+            },
+            "description": "PUT /api/requests/:id (protected – interestedInMentorship must be true)\nUpdates the status of a mentorship request.\n\n✏️  Set REQUEST_ID to the request _id.\n✏️  Set `status` to \"accepted\" or \"rejected\" in the body."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "06 – Notifications",
+      "description": "Endpoints from notificationRoutes.js  →  /api/notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/notifications/my",
+              "host": ["{{BASE_URL}}"],
+              "path": ["notifications", "my"]
+            },
+            "description": "GET /api/notifications/my (protected)\nReturns the 50 most recent notifications for the authenticated user, newest first.\n\n✏️  Copy any returned notification _id into NOTIFICATION_ID to test marking as read."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (Array.isArray(json) && json.length > 0) {",
+                  "  pm.collectionVariables.set('NOTIFICATION_ID', json[0]._id);",
+                  "  console.log('NOTIFICATION_ID saved:', json[0]._id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/notifications/{{NOTIFICATION_ID}}/read",
+              "host": ["{{BASE_URL}}"],
+              "path": ["notifications", "{{NOTIFICATION_ID}}", "read"]
+            },
+            "description": "PUT /api/notifications/:id/read (protected)\nMarks the specified notification as read (isRead = true).\n\n✏️  NOTIFICATION_ID is saved automatically when you run 'Get My Notifications'."
+          }
+        }
+      ]
+    }
+
+  ]
+}

@@ -38,8 +38,8 @@ const getGroups = async (req, res) => {
   try {
     const groups = await Group.find().sort({ createdAt: -1 });
     const formattedGroups = groups.map(g => ({
-       ...g._doc,
-       id: g._id // Map to what frontend expects for `key={group.id}`
+      ...g._doc,
+      id: g._id // Map to what frontend expects for `key={group.id}`
     }));
     res.json(formattedGroups);
   } catch (error) {
