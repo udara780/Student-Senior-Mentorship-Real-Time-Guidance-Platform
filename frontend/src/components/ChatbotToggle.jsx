@@ -5,93 +5,201 @@ import helperIcon from '../assets/helper.png';
 const getResponse = (message) => {
   const msg = message.toLowerCase().trim();
 
-  // Greetings
+  // ── Greetings ─────────────────────────────────────────────────────────────
   if (/^(hi|hello|hey|hiya|yo|sup|good morning|good evening|good afternoon)\b/.test(msg)) {
-    return "Hello! 👋 I'm your AI Study Assistant. I can help you with study groups, mentors, sessions, and more. What do you need?";
+    return "Hello! 👋 I'm your Platform Assistant. I can help with study groups, mentors, sessions, profile setup, errors, and more. What do you need?";
   }
 
-  // Name / identity
+  // ── Identity ───────────────────────────────────────────────────────────────
   if (/\b(your name|who are you|what are you|are you a bot|are you ai)\b/.test(msg)) {
-    return "I'm the AI Study Assistant built into this platform. I can guide you through finding groups, requesting mentors, viewing sessions, and more! 🤖";
+    return "I'm the Platform Assistant built into TeamUp. I can guide you through finding groups, requesting mentors, updating your profile, creating teams, and resolving issues. 🤖";
   }
 
-  // Study group / create group
-  if (/\b(create group|make group|new group|start group|form group)\b/.test(msg)) {
-    return "To create a study group, click **Create Group** in the top navigation. Fill in your module name, module code, and add team members using their student IDs. 📚";
+  // ── HOME / DASHBOARD ──────────────────────────────────────────────────────
+  if (/\b(home|dashboard|home page|main page|landing|start|where am i)\b/.test(msg)) {
+    return "The **Home / Dashboard** is your central hub. From here you can:\n\n• Click **Edit Profile** to update your academic details\n• Click **Find Group** to browse and join study groups\n• Click **Create Group** to form a new team\n• View notifications via the 🔔 bell icon in the navbar\n\nUse the top navigation to move between sections. 🏠";
   }
 
-  // Find group / join group
-  if (/\b(find group|join group|search group|look for group|browse group|group list)\b/.test(msg)) {
-    return "Head to **Find Group** in the navigation bar. You can search by module name or code, browse available groups, and send a join request directly from there! 🔍";
+  // ── PROFILE ───────────────────────────────────────────────────────────────
+  if (/\b(profile|edit profile|update profile|my details|my info|my account|student portal)\b/.test(msg)) {
+    return "To edit your profile, click **Edit Profile** in the navigation bar. You can update:\n\n• **Full Name** — letters & spaces only\n• **Student ID** — 2 letters + 8 digits (e.g. IT21004562)\n• **University Email** — must end with @my.sliit.lk and match your ID\n• **Academic Year** — Year 1 to Year 4\n• **Semester** — Semester 1 or 2\n• **GPA** — between 0.0 and 4.0\n• **Skills** — comma-separated (e.g. React, Java, UI/UX)\n\nClick **Sync Academic Profile** to save. ✏️";
   }
 
-  // Mentor / senior
+  if (/\b(student id|id format|id error|wrong id|invalid id)\b/.test(msg)) {
+    return "Your **Student ID** format is: **2 capital letters + 8 digits**\nExample: `IT21004562`\n\nCommon mistakes:\n• Lowercase letters (use IT not it)\n• Wrong number of digits\n• Spaces or special characters\n\nFix the format — the field will turn green ✅ when valid.";
+  }
+
+  if (/\b(email|university email|email error|email format|sliit email|email not matching)\b/.test(msg)) {
+    return "Your **University Email** must:\n\n1. End with `@my.sliit.lk`\n2. Have your **Student ID** before the @ (e.g. IT21004562@my.sliit.lk)\n\nIf you see 'Email ID must match Student ID', make sure the part before @ exactly equals your Student ID field. 📧";
+  }
+
+  if (/\b(gpa|grade point|gpa error|invalid gpa|gpa range)\b/.test(msg)) {
+    return "Your **GPA** must be a number between **0.0 and 4.0**.\n\nExamples: `3.80`, `2.50`, `4.00`\n\nIf the field has a red border, correct the value and click somewhere else to clear the error. 📊";
+  }
+
+  if (/\b(profile photo|photo|picture|avatar|upload photo|change photo|camera)\b/.test(msg)) {
+    return "To update your **profile photo**:\n\n1. Go to **Edit Profile**\n2. Click the 📷 camera icon on your avatar\n3. Select an image (max **5MB**)\n4. Preview appears immediately\n5. Click **Sync Academic Profile** to save\n\nIf you see 'File size too large', choose a smaller image. 🖼️";
+  }
+
+  if (/\b(skill|skills|expertise|add skill|special skill)\b/.test(msg)) {
+    return "To add **Skills** to your profile:\n\n1. Go to **Edit Profile**\n2. Find the **Special Skills** field\n3. Type comma-separated skills: e.g. `React, Node.js, Figma, Java`\n4. Click **Sync Academic Profile** to save\n\nSkills appear as colorful tags on your profile and are visible to group leaders and mentors. 💡";
+  }
+
+  if (/\b(mentorship toggle|mentorship switch|open to mentor|interested in mentorship)\b/.test(msg)) {
+    return "The **Mentorship Toggle** on your profile controls whether you appear as available to mentor students.\n\n• **OFF** → You won't receive mentor requests\n• **ON** → Your application goes to admin for approval\n\nStatuses:\n⏳ **Pending** — awaiting admin review\n✅ **Approved** — verified mentor\n❌ **Rejected** — toggle again to re-apply\n\nYou cannot toggle while Pending or Approved. 🎓";
+  }
+
+  if (/\b(save profile|profile not saving|sync profile|profile error|failed to save)\b/.test(msg)) {
+    return "If your profile isn't saving, check:\n\n1. **Red borders** on any field — fix those first\n2. **Email mismatch** — email prefix must match Student ID\n3. **GPA out of range** — must be 0.0 to 4.0\n4. **Network issue** — check your internet\n5. **Session expired** — try logging out and back in\n\nPress F12 to open the browser console for more details. 🔧";
+  }
+
+  // ── CREATE GROUP ──────────────────────────────────────────────────────────
+  if (/\b(create group|make group|new group|start group|form group|create team)\b/.test(msg)) {
+    return "To **Create a Group**:\n\n1. Click **Create Group** in the navigation\n2. Fill in **Module Name** (e.g. IT Project Management)\n3. Fill in **Module Code** (e.g. IT3020)\n4. Optionally add a **Project Title**\n5. Set **Maximum Group Size** (2–10)\n6. Optionally enter member **Student IDs** — validated live\n7. Click **Create Project Group**\n\nYou are automatically the **Group Leader**. Members can also join later via join requests! 📚";
+  }
+
+  if (/\b(module name|module code|module info)\b/.test(msg)) {
+    return "When creating a group you need:\n\n• **Module Name** — e.g. `IT Project Management`\n• **Module Code** — e.g. `IT3020`\n• **Project Title** — optional, e.g. `AI-Powered Platform`\n\nThese appear on your group card so other students can find your team. 📋";
+  }
+
+  if (/\b(max members|group size|team size|how many members)\b/.test(msg)) {
+    return "**Maximum Members** sets how many people can join your group (including you as leader). Range: **2 to 10**.\n\nWhen you increase the number, new member input slots appear. Members added later via join requests also count toward this limit. 👥";
+  }
+
+  if (/\b(add member|member slots|member id|member not found|invalid member)\b/.test(msg)) {
+    return "To add members when creating a group:\n\n1. Set **Maximum Members** to your desired size\n2. Type a student's **University ID** in each slot\n3. A **green preview card** appears if the student is found ✅\n4. A **red error** appears if not found ❌\n\nLeave slots empty — members can join later via a join request. 🔍";
+  }
+
+  if (/\b(group creation error|failed to create|create group error)\b/.test(msg)) {
+    return "If group creation fails:\n\n1. **Missing fields** — Module Name and Code are required\n2. **Invalid member ID** — ensure all filled slots show a green preview\n3. **Profile incomplete** — you need a name and studentId set\n4. **Network error** — check your internet\n5. **Server error** — the backend may be down\n\nRefresh and try again. 🔧";
+  }
+
+  // ── FIND GROUP ────────────────────────────────────────────────────────────
+  if (/\b(find group|browse group|search group|group list|available groups|discover group)\b/.test(msg)) {
+    return "To **Find a Group**:\n\n1. Click **Find Group** in the navigation\n2. Use the **search bar** to filter by module name or code\n3. Browse group cards — each shows module info, capacity, and leader\n4. Click **Request to Join** on any group with open spots\n5. The group leader approves or rejects your request\n\nYou'll get a 🔔 notification when the leader responds! 🔍";
+  }
+
+  if (/\b(join group|join request|request to join|send request|join button)\b/.test(msg)) {
+    return "To **join a group**:\n\n1. Go to **Find Group**\n2. Find a group with available spots\n3. Click **Request to Join**\n4. The group leader is notified\n5. Once approved, you're added to the group\n\n⚠️ You cannot join if:\n• The group is full\n• You're already a member\n• You have a pending request for that group\n\nCheck **My Groups** (📁 icon) to view joined groups. 📨";
+  }
+
+  if (/\b(my groups|joined groups|view my group|group i joined|folder icon)\b/.test(msg)) {
+    return "To view your **joined groups**:\n\n1. Go to **Find Group**\n2. Click the **📁 folder icon** next to the search bar\n3. A dropdown shows all your joined groups\n4. Click any group to see **full details** — leader, members, module info, project title\n\nThe group details panel slides in from the right. 📁";
+  }
+
+  if (/\b(view group|group details|group panel|group info|see group|open group)\b/.test(msg)) {
+    return "Click any group in the **My Groups dropdown** to open a slide-in details panel showing:\n\n• Module name & code\n• Project title\n• Group leader's profile card\n• All members' profile cards\n• Your membership confirmation badge\n\nClick any member's name to open their **profile preview**. ℹ️";
+  }
+
+  if (/\b(view member|member profile|member card|click member|mini profile)\b/.test(msg)) {
+    return "In **Find Group**, click any **member or leader name** to open their profile preview panel.\n\nThe panel shows:\n• Name, Student ID, and photo\n• Academic Year, Semester, and GPA\n• Skills & Expertise tags\n\nClose it with the **X** button or by clicking outside. 👤";
+  }
+
+  if (/\b(group leader|leader role|who is leader|leader badge)\b/.test(msg)) {
+    return "The **Group Leader** is the student who created the group. They appear with a green leader badge on group cards.\n\nLeader responsibilities:\n• Approving or rejecting join requests\n\nYou automatically become leader when you create a group. 👑";
+  }
+
+  if (/\b(approve request|reject request|incoming request|pending request|group request)\b/.test(msg)) {
+    return "As a **Group Leader**, you receive join requests when students click 'Request to Join'.\n\n• You'll receive a 🔔 notification for each new request\n• Approved students are automatically added to your group\n• Rejected students are notified\n\nStudents can check their request status under **My Groups** (📁 icon). ✅";
+  }
+
+  if (/\b(group full|no spots|cannot join|capacity full)\b/.test(msg)) {
+    return "If a group is **Full**:\n\n• Search for other available groups with open spots\n• **Create your own group** and be the leader\n• The group's capacity bar shows how full it is\n\nYou can't request to join a full group. 📊";
+  }
+
+  if (/\b(find members|available students|browse students|member search)\b/.test(msg)) {
+    return "The **Find Members** section is at the bottom of the **Find Group** page.\n\nIt shows all registered students and seniors. You can:\n• Browse student cards with skills and academic info\n• Click **Invite to Group** to send an invitation (if you're a leader)\n• Click any student's name to view their full profile\n\nUse the search bar to filter by name or ID. 👥";
+  }
+
+  if (/\b(already member|already in group|duplicate request|already pending)\b/.test(msg)) {
+    return "Common join errors:\n\n• **'Already a member'** — you're already in this group\n• **'Already have a pending request'** — your previous request is waiting for the leader's decision\n\nCheck **My Groups** (📁 icon) to see your memberships, or wait for the leader's response. ⏳";
+  }
+
+  if (/\b(no groups|no results|empty|nothing found|group not showing)\b/.test(msg)) {
+    return "If no groups appear:\n\n• Clear the search bar — a filter may be active\n• No groups have been created yet — **create one** yourself!\n• Backend may be unavailable — try refreshing\n\nIf the page stays blank, check your internet connection. 🔄";
+  }
+
+  // ── MENTORSHIP ────────────────────────────────────────────────────────────
   if (/\b(mentor|senior|mentorship|guidance|find mentor|request mentor|get mentor)\b/.test(msg)) {
-    return "To request a mentor, go to **Request Mentor** in the navigation. Browse verified senior students, view their skills and availability, and send a mentorship request. 🎓";
+    return "To request a **Mentor**:\n\n1. Go to **Request Mentor** in the navigation\n2. Browse verified seniors and their skills\n3. Click **Send Request** with a message\n4. Wait for the senior to accept or reject\n\nOnce accepted, a **private chat room** opens automatically! 🎓";
   }
 
-  // Profile / edit profile
-  if (/\b(profile|edit profile|update profile|my details|my info|student id|gpa|academic)\b/.test(msg)) {
-    return "You can edit your academic profile from **Edit Profile** in the nav. Add your Student ID (e.g. IT21004562), GPA, academic year, semester, and skills. Make sure your email matches your Student ID! ✏️";
+  if (/\b(mentor request sent|mentorship pending|request status)\b/.test(msg)) {
+    return "After sending a **mentor request**:\n\n• Status shows as **Pending**\n• The senior is notified\n• You get a 🔔 notification when they respond\n• **Accepted** → chat room opens\n• **Rejected** → send a request to a different senior\n\nView all sent requests under **My Requests** in the navigation. 📨";
   }
 
-  // Sessions / meetings / schedule
-  if (/\b(session|sessions|meeting|meetings|schedule|book|booking|upcoming)\b/.test(msg)) {
-    return "Sessions are scheduled by your mentor. Once a session is booked, you can view it in the **Sessions** page. Meeting details and links will appear there. 📅";
+  if (/\b(become mentor|apply mentor|senior role|mentor application|want to mentor)\b/.test(msg)) {
+    return "To **become a mentor**:\n\n1. Go to **Edit Profile**\n2. Toggle **Mentorship ON**\n3. Admin reviews your application\n4. Status shows ⏳ **Pending** until reviewed\n5. Once ✅ **Approved**, you receive mentorship requests\n\nMake sure your skills are filled in — students use these to choose mentors! 🎓";
   }
 
-  // Chat / message
-  if (/\b(chat|message|talk|communicate|inbox|dm)\b/.test(msg)) {
-    return "Once your mentorship request is accepted, a private chat room opens automatically. Go to **Chat** in your dashboard to message your mentor in real time. 💬";
+  // ── SESSIONS ──────────────────────────────────────────────────────────────
+  if (/\b(session|sessions|meeting|schedule|book|booking|upcoming)\b/.test(msg)) {
+    return "**Sessions** are scheduled meetings between a mentor and student.\n\n• Mentors schedule sessions after a request is accepted\n• View all sessions in the **Sessions** page\n• Each session shows: date, time, topic, and meeting link\n• You'll get a 🔔 notification when a session is booked\n\nSessions are managed by your mentor. 📅";
   }
 
-  // Availability
-  if (/\b(availability|available|time slot|slot|schedule time)\b/.test(msg)) {
-    return "Seniors manage their availability slots. As a student, you can view a mentor's available times when requesting a session through their profile. 🕐";
+  // ── CHAT ──────────────────────────────────────────────────────────────────
+  if (/\b(chat|message|talk|communicate|inbox|dm|private chat)\b/.test(msg)) {
+    return "**Chat** becomes available once your mentorship request is **accepted**.\n\n• Go to **Chat** in the navigation\n• Messages are sent in **real time**\n• Each accepted mentorship creates its own private chat room\n\nIf you don't see a chat, your request may still be pending. 💬";
   }
 
-  // Login / register / sign in
-  if (/\b(login|log in|sign in|register|sign up|account|password|forgot)\b/.test(msg)) {
-    return "To log in, go to the Login page. To create an account, click Register. If you forget your password, please contact your platform admin for assistance. 🔐";
+  // ── NOTIFICATIONS ─────────────────────────────────────────────────────────
+  if (/\b(notification|notifications|alert|bell|not getting notified)\b/.test(msg)) {
+    return "Notifications appear in the 🔔 **bell icon** in the top nav.\n\nYou'll be notified when:\n• A mentor **accepts or rejects** your request\n• A **join request** is approved or rejected\n• A new **session** is scheduled\n• You receive a **chat message**\n\nClick the bell to view all. Click each one to mark as read. 🔔";
   }
 
-  // Admin / admin panel
-  if (/\b(admin|admin panel|admin dashboard|manage users)\b/.test(msg)) {
-    return "The Admin Panel is only accessible to platform administrators. Admins can approve mentor applications, manage users, and view platform statistics. 🛡️";
+  // ── AUTH ──────────────────────────────────────────────────────────────────
+  if (/\b(login|log in|sign in|cannot login|login error|wrong password|forgot password)\b/.test(msg)) {
+    return "To **log in**:\n\n1. Go to the **Login** page\n2. Enter your university email and password\n3. Click **Login**\n\nCommon errors:\n• **'Invalid credentials'** — check email and password\n• **'User not found'** — you may not be registered\n• Forgot password? Contact your **platform administrator**\n\nCheck your Caps Lock is off! 🔐";
   }
 
-  // Notifications
-  if (/\b(notification|notifications|alert|alerts|bell)\b/.test(msg)) {
-    return "Notifications appear as a bell icon in the top navigation bar. You'll be notified when a mentor accepts or rejects your request, or when a new session is booked. 🔔";
+  if (/\b(register|sign up|create account|new account|registration)\b/.test(msg)) {
+    return "To **register**:\n\n1. Go to the **Register** page\n2. Enter your name, email, and password\n3. Select your role: **Student** or **Senior**\n4. Optionally upload a profile photo\n5. Click **Register**\n\nAfter registering, **complete your profile** immediately — add your Student ID, GPA, year, and skills! 📝";
   }
 
-  // Dark mode / theme
-  if (/\b(dark mode|light mode|theme|night mode)\b/.test(msg)) {
-    return "You can toggle Dark/Light mode using the moon or sun icon in the top navigation bar! 🌙☀️";
+  if (/\b(logout|log out|sign out|exit account)\b/.test(msg)) {
+    return "To **log out**, click your profile icon or name in the top navigation, then select **Logout**.\n\nYour session ends and you'll be redirected to the login page. All data is saved — log back in anytime! 👋";
   }
 
-  // Skills / expertise
-  if (/\b(skill|skills|expertise|technology|tech stack|programming|language)\b/.test(msg)) {
-    return "Skills can be added in your **Edit Profile** page under 'Special Skills'. Enter them comma-separated (e.g. React, Java, UI/UX). They appear on your public profile too! 💡";
+  // ── ERRORS & TROUBLESHOOTING ──────────────────────────────────────────────
+  if (/\b(error|something went wrong|page not loading|blank page|refresh|bug|broken|not working)\b/.test(msg)) {
+    return "If you're experiencing an error, try these steps:\n\n1. **Refresh the page** (Ctrl+R)\n2. **Log out and back in** — session may have expired\n3. **Clear browser cache** (Ctrl+Shift+Delete)\n4. Check your **internet connection**\n5. Make sure the **backend server** is running (port 5000)\n\nIf the problem persists, contact your platform administrator. 🔧";
   }
 
-  // Help / what can you do
-  if (/\b(help|what can you do|features|options|commands|how does this work)\b/.test(msg)) {
-    return `Here's what I can help you with:\n\n📚 Create or Find a study group\n🎓 Request a mentor\n📅 Understand sessions & scheduling\n✏️ Edit your academic profile\n💬 Use the real-time chat\n🔔 Understand notifications\n\nJust type your question!`;
+  if (/\b(server error|500|backend down|api error|connection error|cannot connect)\b/.test(msg)) {
+    return "A **server error** means the backend can't respond.\n\nPossible causes:\n• Backend server not running (port 5000)\n• MongoDB database connection down\n• Network firewall blocking the connection\n\nSolutions:\n• Ask your admin to check if `npm start` is running in the backend folder\n• Check MongoDB Atlas connection\n• Try again in a few minutes 🛠️";
   }
 
-  // Thanks / thank you
-  if (/\b(thank|thanks|thank you|appreciate|great|awesome|perfect|helpful)\b/.test(msg)) {
-    return "You're welcome! 😊 Feel free to ask me anything else about the platform anytime.";
+  if (/\b(not authorized|unauthorized|401|403|token|session expired)\b/.test(msg)) {
+    return "A **401/403 error** means your session has expired or is invalid.\n\nFix:\n1. **Log out** from the platform\n2. **Log back in** with your credentials\n3. If it keeps happening, clear browser cookies\n\nJWT tokens expire after a period for security. 🔐";
   }
 
-  // Bye / goodbye
-  if (/\b(bye|goodbye|see you|later|exit|close|done)\b/.test(msg)) {
-    return "Goodbye! 👋 Come back anytime if you have questions. Good luck with your studies!";
+  // ── ADMIN ─────────────────────────────────────────────────────────────────
+  if (/\b(admin|admin panel|admin dashboard|manage users|platform admin)\b/.test(msg)) {
+    return "The **Admin Panel** is only for platform administrators.\n\nAdmins can:\n• Approve or reject **mentor applications**\n• Manage all **registered users**\n• Monitor **platform statistics**\n\nContact your designated admin for escalated issues. 🛡️";
   }
 
-  // Fallback
-  return `I'm not sure I understand that. Try asking about:\n\n• **Study groups** (create, find, join)\n• **Mentors** (find, request)\n• **Sessions & scheduling**\n• **Profile editing**\n• **Chat & notifications**\n\nOr type **help** to see all options. 😊`;
+  // ── AVAILABILITY ──────────────────────────────────────────────────────────
+  if (/\b(availability|available|time slot|slot|free time)\b/.test(msg)) {
+    return "**Seniors/Mentors** set availability slots so students know when they're free.\n\nAs a **student**, view a mentor's availability on their profile in the **Request Mentor** page.\n\nAs a **senior**, manage your availability from the **Availability** section in your dashboard. 🕐";
+  }
+
+  // ── HELP OVERVIEW ─────────────────────────────────────────────────────────
+  if (/\b(help|what can you do|features|options|how does this work|overview)\b/.test(msg)) {
+    return `Here's everything I can help with:\n\n🏠 **Home** — navigate the dashboard\n📝 **Profile** — update details, photo, skills, GPA\n📚 **Create Group** — form a study team\n🔍 **Find Group** — browse, join, and view groups\n👤 **View Members** — click any member for their profile\n🎓 **Mentorship** — find mentors, send requests, become a mentor\n📅 **Sessions** — scheduled mentor meetings\n💬 **Chat** — real-time messaging\n🔔 **Notifications** — stay updated on requests\n🔐 **Auth** — login, register, logout\n🔧 **Errors** — troubleshoot common problems\n\nJust type your question! 😊`;
+  }
+
+  // ── THANKS ────────────────────────────────────────────────────────────────
+  if (/\b(thank|thanks|thank you|appreciate|great|awesome|perfect|helpful|nice|good job)\b/.test(msg)) {
+    return "You're welcome! 😊 Feel free to ask me anything else about the platform anytime!";
+  }
+
+  // ── BYE ───────────────────────────────────────────────────────────────────
+  if (/\b(bye|goodbye|see you|later|exit|close|done|cya)\b/.test(msg)) {
+    return "Goodbye! 👋 Come back anytime. Good luck with your studies and group projects! 🎓";
+  }
+
+  // ── FALLBACK ──────────────────────────────────────────────────────────────
+  return `I'm not sure I understand that. Try asking about:\n\n• **Profile** — editing details, GPA, photo, skills\n• **Create Group** — forming a study team\n• **Find Group** — joining groups, viewing members\n• **Mentorship** — finding or becoming a mentor\n• **Sessions, Chat, Notifications**\n• **Errors & Troubleshooting**\n\nOr type **help** to see all topics. 😊`;
 };
 
 
@@ -101,7 +209,7 @@ const ChatbotToggle = () => {
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState([
-    { from: 'bot', text: "👋 Hi! I'm your AI Study Assistant. I can help you find study groups, connect with mentors, or answer questions about the platform." },
+    { from: 'bot', text: "👋 Hi! I'm your Platform Assistant. I can help you find study groups, connect with mentors, troubleshoot issues, or answer any questions about TeamUp." },
     { from: 'bot', text: 'What would you like help with today?' },
   ]);
   const messagesEndRef = useRef(null);
@@ -120,7 +228,6 @@ const ChatbotToggle = () => {
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate typing delay (700–1200ms based on response length)
     const response = getResponse(trimmed);
     const delay = Math.min(400 + response.length * 5, 1400);
     setTimeout(() => {
@@ -134,13 +241,12 @@ const ChatbotToggle = () => {
   const handleSuggestion = (text) => sendUserMessage(text);
 
   const suggestions = [
-    'Find a study group',
-    'Request a mentor',
-    'How do sessions work?',
-    'How to edit my profile?',
+    'How do I edit my profile?',
+    'How to create a group?',
+    'How to join a group?',
+    'How do I request a mentor?',
   ];
 
-  // ─ render helpers ─
   const renderText = (text) =>
     text.split('\n').map((line, i) => (
       <span key={i}>
@@ -180,7 +286,6 @@ const ChatbotToggle = () => {
             <p style={{ margin: 0, color: '#f1f5f9', fontWeight: 700, fontSize: '0.95rem' }}>Platform Assistant</p>
             <p style={{ margin: 0, color: '#34d399', fontSize: '0.72rem', fontWeight: 500 }}>● Online</p>
           </div>
-
         </div>
 
         {/* Messages */}
@@ -214,7 +319,7 @@ const ChatbotToggle = () => {
             </div>
           )}
 
-          {/* Suggestion chips — only before first user message */}
+          {/* Suggestion chips */}
           {messages.filter((m) => m.from === 'user').length === 0 && !isTyping && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.2rem' }}>
               {suggestions.map((s) => (
